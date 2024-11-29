@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notable Positions</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <section id="navSection" class="nav-section">
+        <div class="container">
+            <div class="nav-content-div">
+                <a href="index.html" class="logo-item">
+                    <img src="Assets/logo-notable-positions.svg" alt="Notable positions Logo">
+                </a>
+
+                <div class="nav-menu-div">
+                    <a href="index.html" class="nav-menu-item active">All AMC</a>
+                    <a href="your-fundlist.html" class="nav-menu-item">Your Fundlist</a>
+                    <a href="profile.html" class="nav-menu-item">Profile</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="amcListSection" class="main-section">
+        <div class="container">
+            <div class="main-content-div">
+                <div class="h1-body-div">
+                    <h1>Explore all Asset Management Companies</h1>
+                    <p class="description">Analyse the portfolio change of all 42 mutual funds available in india</p>
+                </div>
+
+                <div id="amcList" class="list-div">
+                    <div class="list-card-div">
+                        <div class="list-prefix">
+                            <p id="amcName" class="list-high-emp"></p>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="list-suffix">
+                            <p id="fundCount" class="list-mid-emp"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="footerSection" class="footer-section">
+        <div class="container">
+            <div class="footer-content-div">
+                <div class="footer-left-div">
+                    <p class="footer-text">© 2024</p>
+                </div>
+
+                <div class="footer-links-div">
+                    <a href="index.html" class="footer-link-item">All AMC</a>
+                    <a href="your-fundlist.html" class="footer-link-item">Your Fundlist</a>
+                    <a href="profile.html" class="footer-link-item">Profile</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        const SUPABASE_URL = 'https://ymimxlqqygezpkzqcejp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltaW14bHFxeWdlenBrenFjZWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1OTA3OTAsImV4cCI6MjA0NzE2Njc5MH0.h_l5abS25u4OqHt4LDqC-Hl3XQtwQ6pW7SgnoBEaTRU';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function fetchAMCs() {
+            try {
+                const { data, error } = await supabase
+                    .from('master')
+                    .select('AMC, "Fund Name"');
+
+                if (error) throw error;
+
+                // Group funds by AMC
+                const amcGroups = data.reduce((acc, item) => {
+                    if (!acc[item.AMC]) {
+                        acc[item.AMC] = [];
+                    }
+                    acc[item.AMC].push(item['Fund Name']);
+                    return acc;
+                }, {});
+
+                // Render AMC list
+                const amcListElement = document.getElementById('amcList');
+                amcListElement.innerHTML = ''; // Clear existing content
+
+                for (const [amc, funds] of Object.entries(amcGroups)) {
+                    const listCardDiv = document.createElement('div');
+                    listCardDiv.className = 'list-card-div';
+                    listCardDiv.innerHTML = `
+                        <div class="list-prefix">
+                            <p class="list-high-emp">${amc}</p>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="list-suffix">
+                            <p class="list-mid-emp">${funds.length} Fund${funds.length !== 1 ? 's' : ''}</p>
+                        </div>
+                    `;
+                    listCardDiv.addEventListener('click', () => goToAMCDetail(amc));
+                    amcListElement.appendChild(listCardDiv);
+                }
+            } catch (error) {
+                console.error('Error fetching AMCs:', error);
+            }
+        }
+
+        function goToAMCDetail(amc) {
+            // Encode the AMC name to handle special characters in the URL
+            const encodedAMC = encodeURIComponent(amc);
+            window.location.href = `amc-detail.html?amc=${encodedAMC}`;
+        }
+
+        // Call fetchAMCs when the page loads
+        document.addEventListener('DOMContentLoaded', fetchAMCs);
+    </script>
+</body>
+</html>

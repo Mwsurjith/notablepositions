@@ -1,0 +1,444 @@
+:root {
+    --color-text-high : #363530;
+    --color-text-mid : #797874;
+    --color-text-green : #3E7952;
+    --color-text-red : #793E3E;
+
+    --color-bg-page : #F6F6F3;
+    --color-bg-white : #FFFFFF;
+    --color-bg-layer0 : #F6F6F3;
+    --color-bg-layer1 : #EEEEE7;
+    --color-bg-layer2 : #E1E0E0;
+    --color-bg-layer-none : #00000000;
+
+    --color-border-high : #363530;
+    --color-border-low : #E1E0E0;
+    --color-border-none : #00000000;
+}
+
+body {
+    font-family: "Manrope", serif;
+    margin: 0px;
+    padding: 0px;
+    background-color: var(--color-bg-page);
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+}
+
+.nav-content-div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 4px
+}
+
+.logo-item {
+    font: 500 14px/20px "Manrope", sans-serif;
+    padding: 4px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+}
+
+.logo-item:hover {
+    background-color: var(--color-bg-layer1);
+    border-radius: 4px;
+}
+
+.nav-menu-div {
+    display: flex;
+    gap: 12px;
+    padding: 4px;
+}
+
+.nav-menu-item {
+    font: 400 14px/20px "Manrope", sans-serif;
+    text-decoration: none;
+    color: var(--color-text-mid);
+}
+
+.nav-menu-item:hover {
+    color: var(--color-text-high);
+    text-decoration: underline;
+}
+
+.nav-menu-item.active {
+    color: var(--color-text-high);
+    text-decoration: underline;
+}
+
+.main-content-div {
+    padding: 160px 0px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+}
+
+.h1-body-div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+}
+
+h1 {
+    font: 500 24px/34px "Manrope", sans-serif;
+    margin: 0px;
+    color: var(--color-text-high);
+}
+
+.description {
+    font: 400 14px/20px "Manrope", sans-serif;
+    color: var(--color-text-mid);
+    margin: 0px;
+}
+
+.list-card-div {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    border-radius: 4px;
+
+    cursor: pointer;
+}
+
+.list-card-div:hover {
+    background-color: var(--color-bg-layer2);
+}
+
+.list-prefix {
+    padding: 8px;
+}
+
+.list-high-emp {
+    font: 400 14px/20px "Manrope", sans-serif;
+    color: var(--color-text-high);
+    margin: 0px;
+}
+
+.divider {
+    height: 1px;
+    background-color: var(--color-border-low);
+    flex: 1;
+}
+
+.list-suffix {
+    padding: 8px;
+}
+
+.list-mid-emp {
+    font: 400 14px/20px "Manrope", sans-serif;
+    color: var(--color-text-mid);
+    margin: 0px;
+}
+
+.footer-content-div {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    height: 32px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.footer-left-div {
+    display: flex;
+}
+
+.footer-links-div {
+    display: flex;
+    gap: 12px;
+}
+
+.footer-text {
+    font: 400 14px/20px "Manrope", sans-serif;
+    margin: 0px;
+    color: var(--color-text-mid);
+}
+
+.footer-link-item {
+    font: 400 14px/20px "Manrope", sans-serif;
+    text-decoration: none;
+    color: var(--color-text-mid);
+}
+
+.footer-link-item:hover {
+    color: var(--color-text-high);
+    text-decoration: underline;
+}
+
+.tabs-div {
+    font: 400 14px/20px "Manrope", sans-serif;
+
+    display: flex;
+    padding: 0px 8px;
+    gap: 0px;
+}
+
+.tab-item {
+    font: 400 14px/20px "Manrope", sans-serif;
+    padding: 8px;
+    border-bottom: 1px solid var(--color-border-none);
+    cursor: pointer;
+    color: var(--color-text-mid);
+}
+
+.tab-item:hover {
+    color: var(--color-text-high);
+    border-bottom: 1px solid var(--color-border-low);
+}
+
+.tab-item.active {
+    border-bottom: 1px solid var(--color-border-high);
+    color: var(--color-text-high);
+}
+
+#allFundsList {
+    display: block;
+}
+
+#allocationAnalysis {
+    display: none;
+}
+
+.table-div {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.table-menu {
+    display: flex;
+    justify-content: space-between;
+}
+
+.seg-btn {
+    display: flex;
+    padding: 4px;
+    background-color: white;
+    gap: 2px;
+}
+
+.seg-btn input[type="radio"] {
+    display: none;
+}
+
+.seg-btn input[type="radio"] + label {
+    font: 400 14px/20px "Manrope", sans-serif;
+    padding: 4px;
+    color: var(--color-text-mid);
+    cursor: pointer;
+}
+
+.seg-btn input[type="radio"]:checked + label {
+    background-color: var(--color-bg-layer0);
+    color: var(--color-text-high);
+}
+
+.suffix-menu {
+    display: flex;
+    gap: 8px;
+}
+
+.dropdown-menu {
+    appearance: none;
+    border: 0px;
+    width: auto;
+
+    font: 400 14px/20px "Manrope", sans-serif;
+    color: var(--color-text-mid);
+
+    background-color: var(--color-bg-layer-none);
+    padding: 8px;
+    margin-right: 16px;
+}
+
+.dropdown-menu:hover {
+    color: var(--color-text-high);
+}
+
+.dropdown-menu:focus {
+    outline: none;
+}
+
+.input-dropdown-box {
+    display: flex;
+    position: relative;
+
+    background-color: var(--color-bg-layer1);
+    border-radius: 4px;
+
+    cursor: pointer;
+}
+
+.input-dropdown-box:hover {
+    background-color: var(--color-bg-white);
+}
+
+.dropdown-icon {
+    width: 16px;
+    fill: var(--color-text-mid);
+    padding: 10px 0px;
+    position: absolute;
+    right: 8px;
+    pointer-events: none;
+}
+
+.dropdown-content {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border-low);
+    border-radius: 8px;
+    margin-top: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    width: 200px;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+.dropdown-item input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.dropdown-item span {
+    font-size: 14px;
+    color: #333;
+}
+
+.table-comp {
+    overflow: auto;
+    max-height: 600px;
+    display: block;
+    white-space: nowrap;
+
+    scrollbar-color: var(--color-bg-layer-none);
+}
+
+.table-comp::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+    margin: 8px;
+}
+
+.table-comp::-webkit-scrollbar-thumb {
+    background: var(--color-border-low);
+    border-radius: 8px;
+}
+
+.table-comp::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border-high);
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%; /* Ensures table takes full width */
+    table-layout: fixed; /* Ensures equal distribution of column widths */
+}
+
+th {
+    font: 400 12px/20px "Manrope", sans-serif;
+    text-transform: uppercase;
+    color: var(--color-text-mid);
+    text-align: left;
+
+    padding: 8px;
+    cursor: pointer;
+
+    border-bottom: 1px solid var(--color-border-low);
+}
+
+td {
+    font: 400 14px/20px "Manrope", sans-serif;
+    text-align: left;
+    color: var(--color-text-high);
+
+    padding: 8px;
+    background-color: var(--color-bg-white);
+}
+
+.head-main {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    background-color: var(--color-bg-layer0);
+    border-right: 1px solid var(--color-border-low); 
+}
+
+.head-list {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    background-color: var(--color-bg-layer0);
+
+    max-width: 200px;
+    min-width: 200px;
+    text-overflow: ellipsis; /* Truncates text with ellipsis */
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+.sticky-cell {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: #fff;
+    max-width: 208px;
+    min-width: 200px;
+    overflow: hidden;
+    border-right: 1px solid var(--color-border-low);
+
+    text-overflow: ellipsis; /* Truncates text with ellipsis */
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+.value-cell {
+    max-width: 200px;
+    min-width: 200px;
+}
+
+.positive {
+    color: var(--color-text-green);
+    font: 400 12px/16px "Manrope", sans-serif;
+}
+
+.negative {
+    color: var(--color-text-red);
+    font: 400 12px/16px "Manrope", sans-serif;
+}
+
+.none {
+    color: var(--color-text-mid);
+    font: 400 12px/16px "Manrope", sans-serif;
+}
+
+.symbol {
+    font: 400 12px/16px "Manrope", sans-serif;
+    color: var(--color-text-mid);
+}
+
+#monthOnMonthAnalysis {
+    display: none;
+}

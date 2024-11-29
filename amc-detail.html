@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notable Positions</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <section id="navSection" class="nav-section">
+        <div class="container">
+            <div class="nav-content-div">
+                <a href="index.html" class="logo-item">
+                    <img src="Assets/logo-notable-positions.svg" alt="Notable positions Logo">
+                </a>
+
+                <div class="nav-menu-div">
+                    <a href="index.html" class="nav-menu-item active">All AMC</a>
+                    <a href="your-fundlist.html" class="nav-menu-item">Your Fundlist</a>
+                    <a href="profile.html" class="nav-menu-item">Profile</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="fundListSection" class="main-section">
+        <div class="container">
+            <div class="main-content-div">
+                <div class="h1-body-div">
+                    <h1>AMC Name</h1>
+                    <p class="description">3 funds available to track out of 12 equity funds</p>
+                </div>
+
+                <div id="amcTabs" class="tabs-div">
+                    <div class="tab-item active" onclick="showTab('allFundsList')">All Funds</div>
+                    <div class="tab-item" onclick="showTab('allocationAnalysis')">Allocation Analysis</div>
+                </div>
+
+                <div id="allFundsList" class="list-div">
+                    <div class="list-card-div">
+                        <div class="list-prefix">
+                            <p id="fundName" class="list-high-emp"></p>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="list-suffix">
+                            <p id="aumValue" class="list-mid-emp"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="allocationAnalysis" class="list-div">
+                    <div class="table-div">
+                        <div class="table-menu">
+                            <div class="seg-btn">
+                                <input type="radio" id="amcQuantity" name="amcDataType" value="Quantity" checked>
+                                <label for="amcQuantity" class="radio-label">Quantity</label>
+                                <input type="radio" id="amcMarketValue" name="amcDataType" value="Market Value">
+                                <label for="amcMarketValue" class="radio-label">Market Value</label>
+                                <input type="radio" id="amcNavPercentage" name="amcDataType" value="% to Nav">
+                                <label for="amcNavPercentage" class="radio-label">% to Nav</label>
+                            </div>
+
+                            <div class="suffix-menu">
+                                <div class="input-dropdown-box">
+                                    <select id="amcSortType" class="dropdown-menu">
+                                        <option value="change">Change</option>
+                                        <option value="value">Value</option>
+                                    </select>
+
+                                    <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                        fill="currentColor">
+                                        <path
+                                            d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z">
+                                        </path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table id="amcTable" class="table-comp">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable('amcTable', 0)">Stock Name</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="footerSection" class="footer-section">
+        <div class="container">
+            <div class="footer-content-div">
+                <div class="footer-left-div">
+                    <p class="footer-text">© 2024</p>
+                </div>
+
+                <div class="footer-links-div">
+                    <a href="index.html" class="footer-link-item">All AMC</a>
+                    <a href="your-fundlist.html" class="footer-link-item">Your Fundlist</a>
+                    <a href="profile.html" class="footer-link-item">Profile</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <script>
+        const SUPABASE_URL = 'https://ymimxlqqygezpkzqcejp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltaW14bHFxeWdlenBrenFjZWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1OTA3OTAsImV4cCI6MjA0NzE2Njc5MH0.h_l5abS25u4OqHt4LDqC-Hl3XQtwQ6pW7SgnoBEaTRU';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let masterData = [];
+        let monthlyData = {};
+        let months = [];
+        let isinData = [];
+
+        // Function to show the selected tab
+        function showTab(tabId) {
+            // Hide all tab contents
+            document.getElementById('allFundsList').style.display = 'none';
+            document.getElementById('allocationAnalysis').style.display = 'none';
+
+            // Show the selected tab content
+            document.getElementById(tabId).style.display = 'block';
+
+            // Update active tab styling
+            var tabs = document.querySelectorAll('#amcTabs .tab-item');
+            tabs.forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        async function fetchIsinData() {
+    try {
+        let allData = [];
+        let page = 0;
+        const pageSize = 1000; // Fetch 1000 rows at a time
+        let hasMore = true;
+
+        while (hasMore) {
+            const { data, error, count } = await supabase
+                .from('isin')
+                .select('"ISIN Code", "Stock Name", Symbol', { count: 'exact' })
+                .range(page * pageSize, (page + 1) * pageSize - 1);
+
+            if (error) throw error;
+
+            allData = allData.concat(data);
+            page++;
+            hasMore = data.length === pageSize;
+
+            console.log(`Fetched ${allData.length} rows out of ${count}`);
+        }
+
+        isinData = allData;
+        console.log('All ISIN data fetched successfully:', isinData);
+    } catch (error) {
+        console.error('Error fetching ISIN data:', error.message, error.details);
+        document.getElementById('allocationAnalysis').innerHTML = '<p>Error loading stock data. Please try again later.</p>';
+    }
+}
+
+async function fetchAndRenderFunds(amcName) {
+        try {
+            await fetchIsinData();
+            const { data, error } = await supabase
+                .from('master')
+                .select('"Fund Name", AUM')
+                .eq('AMC', amcName);
+
+            if (error) throw error;
+
+            const allFundsList = document.getElementById('allFundsList');
+            allFundsList.innerHTML = ''; // Clear existing content
+
+            if (data.length === 0) {
+                allFundsList.innerHTML = '<p>No funds found for this AMC.</p>';
+                return;
+            }
+
+            data.forEach((fund) => {
+                const listCardDiv = document.createElement('div');
+                listCardDiv.className = 'list-card-div';
+                listCardDiv.innerHTML = `
+                    <div class="list-prefix">
+                        <p class="list-high-emp">${fund['Fund Name']}</p>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="list-suffix">
+                        <p class="list-mid-emp">${fund['AUM']}</p>
+                    </div>
+                `;
+                listCardDiv.addEventListener('click', () => goToFundDetail(amcName, fund['Fund Name'], fund['AUM']));
+                allFundsList.appendChild(listCardDiv);
+            });
+
+            // After rendering funds, fetch and render allocation analysis
+            await fetchAllocationAnalysis(amcName);
+        } catch (error) {
+            console.error('Error fetching funds:', error);
+            document.getElementById('allFundsList').innerHTML = '<p>Error loading funds. Please try again later.</p>';
+        }
+    }
+
+    function goToFundDetail(amcName, fundName, aumSize) {
+        const encodedAMC = encodeURIComponent(amcName);
+        const encodedFund = encodeURIComponent(fundName);
+        const encodedAUM = encodeURIComponent(aumSize);
+        const url = `fund-detail.html?amc=${encodedAMC}&fund=${encodedFund}&aum=${encodedAUM}`;
+        window.location.href = url;
+    }
+
+        async function fetchAllocationAnalysis(amcName) {
+            try {
+                const { data: amcData, error: amcError } = await supabase
+                    .from('master')
+                    .select('*')
+                    .eq('AMC', amcName);
+
+                if (amcError) throw amcError;
+
+                masterData = amcData;
+
+                await fetchMonthlyData();
+                renderAllocationAnalysis();
+            } catch (error) {
+                console.error('Error fetching allocation analysis:', error);
+                document.getElementById('allocationAnalysis').innerHTML = '<p>Error loading allocation analysis. Please try again later.</p>';
+            }
+    }
+
+    // Update the fetchMonthlyData function to use pagination
+async function fetchMonthlyData() {
+    monthlyData = {};
+    for (const fund of masterData) {
+        let allData = [];
+        let page = 0;
+        const pageSize = 1000; // Fetch 1000 rows at a time
+        let hasMore = true;
+
+        while (hasMore) {
+            const { data, error, count } = await supabase
+                .from(fund['Database Table'])
+                .select('*', { count: 'exact' })
+                .range(page * pageSize, (page + 1) * pageSize - 1);
+
+            if (error) {
+                console.error(`Error fetching data for ${fund['Fund Name']}:`, error);
+                break;
+            }
+
+            allData = allData.concat(data);
+            page++;
+            hasMore = data.length === pageSize;
+
+            console.log(`Fetched ${allData.length} rows out of ${count} for ${fund['Fund Name']}`);
+        }
+
+        monthlyData[fund['Fund Name']] = allData;
+        months = [...new Set([...months, ...allData.map(d => d['Month'])])];
+    }
+    months.sort((a, b) => new Date(a) - new Date(b));
+}
+
+function renderAllocationAnalysis() {
+    const table = document.getElementById('amcTable');
+    if (!table) {
+        console.error('amcTable not found');
+        return;
+    }
+
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    if (!thead || !tbody) {
+        console.error('thead or tbody not found in amcTable');
+        return;
+    }
+
+    // Clear existing content
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
+
+    // Create header row
+    const headerRow = document.createElement('tr');
+    const stockHeader = document.createElement('th');
+    stockHeader.textContent = 'STOCK NAME';
+    stockHeader.classList.add('head-main'); // CSS class
+    stockHeader.onclick = () => sortTable(0);
+    headerRow.appendChild(stockHeader);
+
+    months.forEach((month, index) => {
+        const th = document.createElement('th');
+        th.textContent = month.toUpperCase();
+        th.classList.add('head-list'); // CSS class
+        th.onclick = () => sortTable(index + 1);
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+
+    // Create rows for each stock
+    const stocks = [...new Set(masterData.flatMap(fund => 
+        monthlyData[fund['Fund Name']].map(d => d['ISIN Code'])
+    ))];
+
+    stocks.forEach(stock => {
+        const row = document.createElement('tr');
+        const { 'Stock Name': stockName, Symbol: symbol } = getStockInfo(stock);
+
+        // Stock name cell
+        const stockCell = document.createElement('td');
+        stockCell.innerHTML = `${stockName} <br> <span class="symbol">${symbol}</span>`;
+        stockCell.classList.add('sticky-cell'); // CSS class
+        row.appendChild(stockCell);
+
+        // Create value cells for each month
+        let previousValue = null;
+        months.forEach(month => {
+            const values = masterData.map(fund => {
+                const monthData = monthlyData[fund['Fund Name']].find(d => 
+                    d['Month'] === month && d['ISIN Code'] === stock
+                );
+                return monthData ? parseFloat(monthData[getDataType()]) || 0 : 0;
+            });
+            const totalValue = values.reduce((a, b) => a + b, 0);
+
+            const valueCell = document.createElement('td');
+            valueCell.innerHTML = `${formatIndianNumber(totalValue.toFixed(2))}`;
+            valueCell.classList.add('value-cell'); // CSS class
+
+            // Add change value if we have a previous value
+            if (previousValue !== null) {
+                const change = totalValue - previousValue;
+                const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'none';
+                const changeSign = change > 0 ? '+' : '';
+                const changeValue = Math.abs(change).toFixed(2);
+
+                valueCell.innerHTML += `<br><span class="${changeClass}" data-change="${change.toFixed(2)}">${changeSign}${formatIndianNumber(changeValue)}</span>`;
+            } else {
+                valueCell.innerHTML += `<br><span class="none" data-change="0">0.00</span>`;
+            }
+
+            row.appendChild(valueCell);
+            previousValue = totalValue;
+        });
+
+        tbody.appendChild(row);
+    });
+}
+
+    function getStockInfo(isinCode) {
+        const stockInfo = isinData.find(item => item['ISIN Code'] === isinCode);
+        return stockInfo || { 'Stock Name': isinCode, 'Symbol': 'N/A' };
+    }
+
+    function formatIndianNumber(num) {
+        const parts = num.toString().split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join('.');
+    }
+
+        function getDataType() {
+            const dataType = document.querySelector('input[name="amcDataType"]:checked').value;
+            switch (dataType) {
+                case 'Quantity': return 'Quantity';
+                case 'Market Value': return 'Market Value';
+                case '% to Nav': return '% to Nav';
+                default: return 'Quantity';
+            }
+        }
+
+        function sortTable(columnIndex) {
+    const table = document.getElementById('amcTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    const sortType = document.getElementById('amcSortType').value;
+
+    rows.sort((a, b) => {
+        let aValue, bValue;
+
+        if (columnIndex === 0) {
+            // Sort by stock name
+            aValue = a.cells[0].textContent;
+            bValue = b.cells[0].textContent;
+            return aValue.localeCompare(bValue);
+        } else {
+            // Sort by numeric value
+            if (sortType === 'value') {
+                aValue = parseFloat(a.cells[columnIndex].textContent.split('\n')[0].replace(/,/g, ''));
+                bValue = parseFloat(b.cells[columnIndex].textContent.split('\n')[0].replace(/,/g, ''));
+            } else if (sortType === 'change') {
+                aValue = parseFloat(a.cells[columnIndex].querySelector('span').dataset.change);
+                bValue = parseFloat(b.cells[columnIndex].querySelector('span').dataset.change);
+            }
+            return bValue - aValue; // Descending order
+        }
+    });
+
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+        function getAMCFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('amc');
+        }
+
+        window.onload = function() {
+        const amcName = getAMCFromURL();
+        if (amcName) {
+            document.querySelector('h1').textContent = amcName;
+            fetchAndRenderFunds(amcName);
+        } else {
+            document.getElementById('allFundsList').innerHTML = '<p>No AMC specified.</p>';
+        }
+
+        const dataTypeRadios = document.querySelectorAll('input[name="amcDataType"]');
+        if (dataTypeRadios) {
+            dataTypeRadios.forEach(radio => {
+                radio.addEventListener('change', renderAllocationAnalysis);
+            });
+        }
+
+        const amcSortType = document.getElementById('amcSortType');
+        if (amcSortType) {
+            amcSortType.addEventListener('change', () => {
+                sortTable('amcTable', months.length + 1, amcSortType.value);
+            });
+        }
+    };
+
+    fetchAndRenderFunds(amcName);
+    </script>
+</body>
+</html>

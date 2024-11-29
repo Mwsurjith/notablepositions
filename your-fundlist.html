@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notable Positions</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <section id="navSection" class="nav-section">
+        <div class="container">
+            <div class="nav-content-div">
+                <a href="index.html" class="logo-item">
+                    <img src="Assets/logo-notable-positions.svg" alt="Notable positions Logo">
+                </a>
+
+                <div class="nav-menu-div">
+                    <a href="index.html" class="nav-menu-item">All AMC</a>
+                    <a href="your-fundlist.html" class="nav-menu-item active">Your Fundlist</a>
+                    <a href="profile.html" class="nav-menu-item">Profile</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="fundListSection" class="main-section">
+        <div class="container">
+            <div class="main-content-div">
+                <div class="h1-body-div">
+                    <h1>Your Fundlist</h1>
+                    <p class="description">Track multiple AMCs in one place</p>
+                </div>
+
+                <div id="amcTabs" class="tabs-div">
+                    <div class="tab-item active" onclick="showTab('perMonthAnalysis')">Per Month Analysis</div>
+                    <div class="tab-item" onclick="showTab('monthOnMonthAnalysis')">Month on Month Analysis</div>
+                </div>
+
+                <div id="perMonthAnalysis" class="list-div">
+                    <div class="table-div">
+                        <div class="table-menu">
+                            <div class="seg-btn">
+                                <input type="radio" id="pcaQuantity" name="pcaDataType" value="Quantity" checked>
+                                <label for="pcaQuantity" class="radio-label">Quantity</label>
+                                <input type="radio" id="pcaMarketValue" name="pcaDataType" value="Market Value">
+                                <label for="pcaMarketValue" class="radio-label">Market Value</label>
+                                <input type="radio" id="pcaNavPercentage" name="pcaDataType" value="% to Nav">
+                                <label for="pcaNavPercentage" class="radio-label">% to Nav</label>
+                            </div>
+
+                            <div class="suffix-menu">
+                                <div class="input-dropdown-box">
+                                    <select id="monthSelect" class="dropdown-menu"></select>
+    
+                                    <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                        fill="currentColor">
+                                        <path
+                                            d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z">
+                                        </path>
+                                    </svg>
+                                </div>
+
+                                <div class="input-dropdown-box">
+                                    <select id="pmaAMCSelect" class="dropdown-menu">
+                                        <option value="All Funds">All Funds</option>
+                                    </select>
+    
+                                    <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                        fill="currentColor">
+                                        <path
+                                            d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z">
+                                        </path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table id="pmaTable" class="table-comp">
+                            <thead>
+                                <tr>
+                                    
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+
+                    </div>
+                </div>
+
+                <div id="monthOnMonthAnalysis" class="list-div">
+                    <div class="table-div">
+                        <div class="table-menu">
+                            <div class="seg-btn">
+                                <input type="radio" id="momQuantity" name="momDataType" value="Quantity" checked>
+                                <label for="momQuantity" class="radio-label">Quantity</label>
+                                <input type="radio" id="momMarketValue" name="momDataType" value="Market Value">
+                                <label for="momMarketValue" class="radio-label">Market Value</label>
+                                <input type="radio" id="momNavPercentage" name="momDataType" value="% to Nav">
+                                <label for="momNavPercentage" class="radio-label">% to Nav</label>
+                            </div>
+
+                            <div class="suffix-menu">
+                                <div class="input-dropdown-box">
+                                    <button id="momAMCButton" class="dropdown-menu" onclick="toggleAMCDropdown(event)">
+                                        All AMC
+                                        <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z"></path>
+                                        </svg>
+                                    </button>
+                                    <div id="momAMCDropdown" class="dropdown-content" style="display: none;">
+                                        <label class="dropdown-item">
+                                            <input type="checkbox" value="all" checked onchange="handleAllAMCChange(this)">
+                                            <span>All AMC</span>
+                                        </label>
+                                        <div id="momAMCOptions">
+                                            <!-- AMC options will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table id="momTable" class="table-comp">
+                            <thead>
+                                <tr>
+                                    
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="footerSection" class="footer-section">
+        <div class="container">
+            <div class="footer-content-div">
+                <div class="footer-left-div">
+                    <p class="footer-text">© 2024</p>
+                </div>
+
+                <div class="footer-links-div">
+                    <a href="index.html" class="footer-link-item">All AMC</a>
+                    <a href="your-fundlist.html" class="footer-link-item">Your Fundlist</a>
+                    <a href="profile.html" class="footer-link-item">Profile</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        const SUPABASE_URL = 'https://ymimxlqqygezpkzqcejp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltaW14bHFxeWdlenBrenFjZWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1OTA3OTAsImV4cCI6MjA0NzE2Njc5MH0.h_l5abS25u4OqHt4LDqC-Hl3XQtwQ6pW7SgnoBEaTRU';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let masterData, isinData, monthlyData;
+        let months = [];
+
+        function formatIndianNumber(number) {
+            const parts = number.toString().split('.');
+            parts[0] = parts[0].replace(/(\d)(?=(\d\d)+\d$)/g, "$1,");
+            return parts.join('.');
+        }
+
+        async function fetchData() {
+            showLoading(true);
+            try {
+                const { data: master, error: masterError } = await supabase
+                    .from('master')
+                    .select('*');
+                if (masterError) throw masterError;
+
+                let allIsinData = [];
+                let page = 0;
+                const pageSize = 1000;
+                while (true) {
+                    const { data: isin, error: isinError } = await supabase
+                        .from('isin')
+                        .select('*')
+                        .range(page * pageSize, (page + 1) * pageSize - 1);
+                    
+                    if (isinError) throw isinError;
+                    
+                    allIsinData = allIsinData.concat(isin);
+                    
+                    if (isin.length < pageSize) break;
+                    page++;
+                }
+
+                masterData = master;
+                isinData = allIsinData;
+                
+                await fetchMonthlyData();
+                renderPerMonthAnalysis();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                alert('An error occurred while fetching data. Please try again later.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function fetchMonthlyData() {
+            monthlyData = {};
+            for (const fund of masterData) {
+                const { data, error } = await supabase.from(fund['Database Table']).select('*');
+                if (error) {
+                    console.error(`Error fetching data for ${fund['Fund Name']}:`, error);
+                    continue;
+                }
+                monthlyData[fund['Fund Name']] = data;
+                months = [...new Set([...months, ...data.map(d => d['Month'])])];
+            }
+            months.sort((a, b) => new Date(a) - new Date(b));
+            updateMonthDropdown();
+        }
+
+        async function fetchMonthOnMonthData() {
+    try {
+        console.log('Fetching master data...');
+        const { data: masterData, error: masterError } = await supabase
+            .from('master')
+            .select('*');
+
+        if (masterError) {
+            console.error('Error fetching master data:', masterError);
+            throw masterError;
+        }
+
+        console.log('Master data fetched successfully:', masterData);
+
+        // Fetch monthly data for each fund
+        let allMonthlyData = [];
+        for (const fund of masterData) {
+            const tableName = fund['Database Table'];
+            console.log(`Fetching monthly data for ${fund['Fund Name']} from table ${tableName}...`);
+            
+            const { data: monthlyData, error: monthlyError } = await supabase
+                .from(tableName)
+                .select('*');
+
+            if (monthlyError) {
+                console.error(`Error fetching monthly data for ${fund['Fund Name']}:`, monthlyError);
+                throw monthlyError;
+            }
+
+            console.log(`Monthly data fetched successfully for ${fund['Fund Name']}:`, monthlyData);
+            
+            // Add fund name to each monthly data entry
+            const monthlyDataWithFund = monthlyData.map(entry => ({...entry, 'Fund Name': fund['Fund Name']}));
+            allMonthlyData = allMonthlyData.concat(monthlyDataWithFund);
+        }
+
+        console.log('All monthly data fetched successfully:', allMonthlyData);
+
+        const amcs = [...new Set(masterData.map(fund => fund['AMC']))];
+        const momAMCOptions = document.getElementById('momAMCOptions');
+        if (momAMCOptions) {
+            momAMCOptions.innerHTML = amcs.map(amc => `
+                <label class="dropdown-item">
+                    <input type="checkbox" value="${amc}" checked onchange="handleAMCOptionChange()">
+                    <span>${amc}</span>
+                </label>
+            `).join('');
+        }
+
+        // Sort months in ascending order, starting from August 24
+        const months = [...new Set(allMonthlyData.map(item => item['Month']))].sort((a, b) => {
+            const dateA = new Date(a);
+            const dateB = new Date(b);
+            if (dateA.getFullYear() === dateB.getFullYear()) {
+                return dateA.getMonth() - dateB.getMonth();
+            }
+            return dateA.getFullYear() - dateB.getFullYear();
+        });
+
+        // Filter months to start from August 24
+        const startMonth = months.find(month => {
+            const date = new Date(month);
+            return date.getMonth() === 7 && date.getFullYear() === 2024;
+        });
+        const filteredMonths = months.slice(months.indexOf(startMonth));
+
+        renderMonthOnMonthTable(masterData, allMonthlyData, amcs, filteredMonths);
+
+        // Update global variables for use in other functions
+        window.masterData = masterData;
+        window.allMonthlyData = allMonthlyData;
+        window.months = filteredMonths;
+
+        // Initialize the dropdown text
+        updateAMCButtonText();
+
+    } catch (error) {
+        console.error('Error in fetchMonthOnMonthData:', error);
+        document.getElementById('monthOnMonthAnalysis').innerHTML = '<p>Error loading month on month data. Please check the console for more details.</p>';
+    }
+}
+
+        function updateMonthDropdown() {
+            const monthSelect = document.getElementById('monthSelect');
+            monthSelect.innerHTML = '<option value="">Select months to compare</option>';
+            for (let i = 0; i < months.length - 1; i++) {
+                monthSelect.add(new Option(`${months[i]} - ${months[i+1]}`, i));
+            }
+            monthSelect.addEventListener('change', renderPerMonthAnalysis);
+        }
+
+        function getStockName(isinCode) {
+            const stock = isinData.find(s => s['ISIN Code'] === isinCode);
+            return stock ? stock['Stock Name'] : isinCode;
+        }
+
+        function getStockSymbol(isinCode) {
+            const stock = isinData.find(s => s['ISIN Code'] === isinCode);
+            return stock ? stock['Symbol'] : '';
+        }
+
+        function getSelectedAMCs() {
+    return Array.from(document.getElementById('momAMCSelect').selectedOptions).map(option => option.value);
+}
+
+        function renderPerMonthAnalysis() {
+            const monthIndex = parseInt(document.getElementById('monthSelect').value);
+            if (isNaN(monthIndex)) return;
+
+            const dataType = document.querySelector('input[name="pcaDataType"]:checked').value;
+            const table = document.getElementById('pmaTable');
+            const thead = table.querySelector('thead tr');
+            const tbody = table.querySelector('tbody');
+
+            thead.innerHTML = `
+                <th onclick="sortTable('pmaTable', 0)" class="head-main">Stock Name</th>
+                <th onclick="sortTable('pmaTable', 1)" class="head-list">Consolidated Change</th>
+            `;
+            const amcs = [...new Set(masterData.map(fund => fund['AMC']))];
+            amcs.forEach((amc, index) => {
+                thead.innerHTML += `<th onclick="sortTable('pmaTable', ${index + 2})" class="head-list">${amc}</th>`;
+            });
+
+            tbody.innerHTML = '';
+            const stocks = [...new Set(Object.values(monthlyData).flatMap(data => data.map(d => d['ISIN Code'])))];
+
+            stocks.forEach(stock => {
+                const row = tbody.insertRow();
+                const stockNameCell = row.insertCell();
+                stockNameCell.innerHTML = `${getStockName(stock)}<br><span class="symbol">${getStockSymbol(stock)}</span>`;
+                stockNameCell.className = 'sticky-cell';
+                
+                let consolidatedChange = 0;
+                amcs.forEach((amc, index) => {
+                    const amcFunds = masterData.filter(fund => fund['AMC'] === amc);
+                    let month0Value = 0, month1Value = 0;
+                    amcFunds.forEach(fund => {
+                        const month0Data = monthlyData[fund['Fund Name']].find(d => d['ISIN Code'] === stock && d['Month'] === months[monthIndex]);
+                        const month1Data = monthlyData[fund['Fund Name']].find(d => d['ISIN Code'] === stock && d['Month'] === months[monthIndex + 1]);
+                        if (month0Data && month1Data) {
+                            if (dataType === 'Quantity') {
+                                month0Value += parseFloat(month0Data['Quantity']) || 0;
+                                month1Value += parseFloat(month1Data['Quantity']) || 0;
+                            } else if (dataType === 'Market Value') {
+                                month0Value += parseFloat(month0Data['Market Value']) || 0;
+                                month1Value += parseFloat(month1Data['Market Value']) || 0;
+                            } else if (dataType === '% to Nav') {
+                                month0Value += parseFloat(month0Data['% to Nav']) || 0;
+                                month1Value += parseFloat(month1Data['% to Nav']) || 0;
+                            }
+                        }
+                    });
+                    const change = month1Value - month0Value;
+                    consolidatedChange += change;
+                    row.insertCell().textContent = formatIndianNumber(change.toFixed(2));
+                });
+                
+                row.insertCell(1).textContent = formatIndianNumber(consolidatedChange.toFixed(2));
+            });
+        }
+
+        function renderMonthOnMonthTable(masterData, monthlyData, selectedAMCs, months) {
+    const table = document.getElementById('momTable');
+    const thead = table.querySelector('thead tr');
+    const tbody = table.querySelector('tbody');
+    const dataType = document.querySelector('input[name="momDataType"]:checked').value;
+
+    // Update table header
+    thead.innerHTML = '<th onclick="sortTable(\'momTable\', 0)" class="head-main">Stock Name</th>';
+    months.forEach((month, index) => {
+        const date = new Date(month);
+        const monthName = date.toLocaleString('default', { month: 'long' });
+        const year = date.getFullYear().toString().slice(-2);
+        thead.innerHTML += `<th onclick="sortTable('momTable', ${index + 1})" class="head-list">${monthName} ${year} Change</th>`;
+    });
+
+    // Get all unique stocks
+    const stocks = [...new Set(monthlyData.map(item => item['ISIN Code']))];
+
+    // Prepare table body data
+    const tableData = stocks.map(stock => {
+        const row = [getStockName(stock)];
+        months.forEach((month, monthIndex) => {
+            if (monthIndex === 0) {
+                row.push('-'); // No change for the first month
+                return;
+            }
+
+            let consolidatedChange = 0;
+            selectedAMCs.forEach(amc => {
+                const amcFunds = masterData.filter(fund => fund['AMC'] === amc);
+                amcFunds.forEach(fund => {
+                    const prevMonthData = monthlyData.find(d => d['ISIN Code'] === stock && d['Month'] === months[monthIndex - 1] && d['Fund Name'] === fund['Fund Name']);
+                    const currentMonthData = monthlyData.find(d => d['ISIN Code'] === stock && d['Month'] === month && d['Fund Name'] === fund['Fund Name']);
+                    
+                    if (prevMonthData && currentMonthData) {
+        let prevValue = 0, currentValue = 0;
+        if (dataType === 'Quantity') {
+            prevValue = parseFloat(prevMonthData['Quantity']) || 0;
+            currentValue = parseFloat(currentMonthData['Quantity']) || 0;
+        } else if (dataType === 'Market Value') {
+            prevValue = parseFloat(prevMonthData['Market Value']) || 0;
+            currentValue = parseFloat(currentMonthData['Market Value']) || 0;
+        } else if (dataType === '% to Nav') {
+            prevValue = parseFloat(prevMonthData['% to Nav']) || 0;
+            currentValue = parseFloat(currentMonthData['% to Nav']) || 0;
+        }
+        consolidatedChange += currentValue - prevValue;
+    }
+                });
+            });
+            row.push(formatIndianNumber(consolidatedChange.toFixed(2)));
+        });
+        return row;
+    });
+
+    // Render table body
+    tbody.innerHTML = tableData.map(row => `
+        <tr>
+            ${row.map((cell, index) => `
+                <td ${index === 0 ? 'class="sticky-cell"' : ''}>${cell}</td>
+            `).join('')}
+        </tr>
+    `).join('');
+}
+
+        function sortTable(tableId, n, sortType = 'value') {
+            const table = document.getElementById(tableId);
+            let rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            switching = true;
+            dir = "asc";
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    
+                    let xValue, yValue;
+                    if (n === 0) { // Stock Name column
+                        xValue = x.textContent.toLowerCase();
+                        yValue = y.textContent.toLowerCase();
+                    } else if (sortType === 'change' && x.querySelector('span[data-change]')) {
+                        xValue = parseFloat(x.querySelector('span[data-change]').getAttribute('data-change'));
+                        yValue = parseFloat(y.querySelector('span[data-change]').getAttribute('data-change'));
+                    } else {
+                        xValue = parseFloat(x.textContent.replace(/,/g, ''));
+                        yValue = parseFloat(y.textContent.replace(/,/g, ''));
+                    }
+                    
+                    if (dir == "asc") {
+                        if ((typeof xValue === 'string' && xValue > yValue) || 
+                            (typeof xValue === 'number' && xValue > yValue)) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if ((typeof xValue === 'string' && xValue < yValue) || 
+                            (typeof xValue === 'number' && xValue < yValue)) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading')
+        }
+
+        function toggleAMCDropdown(event) {
+    event.preventDefault();
+    const dropdown = document.getElementById('momAMCDropdown');
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+function handleAllAMCChange(checkbox) {
+    const options = document.querySelectorAll('#momAMCOptions input[type="checkbox"]');
+    options.forEach(option => {
+        option.checked = checkbox.checked;
+    });
+    updateAMCButtonText();
+    updateTable();
+}
+
+function handleAMCOptionChange() {
+    const allCheckbox = document.querySelector('input[value="all"]');
+    const options = document.querySelectorAll('#momAMCOptions input[type="checkbox"]');
+    const allChecked = Array.from(options).every(option => option.checked);
+    allCheckbox.checked = allChecked;
+    updateAMCButtonText();
+    updateTable(); // Call updateTable here
+}
+
+function updateAMCButtonText() {
+    const button = document.getElementById('momAMCButton');
+    const selectedOptions = document.querySelectorAll('#momAMCOptions input[type="checkbox"]:checked');
+    
+    if (selectedOptions.length === 0) {
+        button.textContent = 'Select AMC';
+    } else if (document.querySelector('input[value="all"]').checked) {
+        button.textContent = 'All AMC';
+    } else {
+        button.textContent = `${selectedOptions.length} AMC selected`;
+    }
+    
+    // Add the dropdown icon back
+    button.innerHTML = button.textContent + '<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z"></path></svg>';
+}
+
+function getSelectedAMCs() {
+    const options = document.querySelectorAll('#momAMCOptions input[type="checkbox"]:checked');
+    return Array.from(options).map(option => option.value);
+}
+
+function updateTable() {
+    const selectedAMCs = getSelectedAMCs();
+    renderMonthOnMonthTable(masterData, allMonthlyData, selectedAMCs, months);
+}
+
+        function addEventListeners() {
+            document.querySelectorAll('input[name="pmaDataType"]').forEach(radio => {
+                radio.addEventListener('change', renderPerMonthAnalysis);
+            });
+            // New event listeners for momDataType
+    document.querySelectorAll('input[name="momDataType"]').forEach(radio => {
+        radio.addEventListener('change', updateTable);
+    });
+            document.addEventListener('DOMContentLoaded', () => {
+                fetchMonthOnMonthData();
+            });
+        }
+
+        function showTab(tabId) {
+  // Hide all tab contents
+  document.querySelectorAll('.list-div').forEach(div => {
+    div.style.display = 'none';
+  });
+
+  // Remove 'active' class from all tab items
+  document.querySelectorAll('.tab-item').forEach(item => {
+    item.classList.remove('active');
+  });
+
+  // Show the selected tab content
+  document.getElementById(tabId).style.display = 'block';
+
+  // Add 'active' class to the clicked tab item
+  document.querySelector(`.tab-item[onclick="showTab('${tabId}')"]`).classList.add('active');
+}
+
+// Add event listeners to tab items
+document.addEventListener('DOMContentLoaded', () => {
+  const tabItems = document.querySelectorAll('.tab-item');
+  tabItems.forEach(item => {
+    item.addEventListener('click', (event) => {
+      const tabId = event.target.getAttribute('onclick').match(/'([^']+)'/)[1];
+      showTab(tabId);
+    });
+  });
+
+  document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('momAMCDropdown');
+        const button = document.getElementById('momAMCButton');
+        if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Add event listener for AMC option changes
+    document.getElementById('momAMCOptions').addEventListener('change', handleAMCOptionChange);
+
+  // Show the default tab (Per Month Analysis)
+  showTab('perMonthAnalysis');
+});
+
+
+        fetchData();
+        addEventListeners();
+    </script>
+</body>
+</html>
