@@ -442,3 +442,28 @@ td {
 #monthOnMonthAnalysis {
     display: none;
 }
+
+@media only screen and (max-width: 480px) {
+    .table-menu {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .tab-item {
+        flex: 1;
+        text-align: center;
+    }
+
+    .suffix-menu {
+        flex-direction: column;
+    }
+
+    .radio-label {
+        flex: 1;
+        text-align: center;
+    }
+
+    .table-div {
+        padding: 0px 8px;
+    }
+}

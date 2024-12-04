@@ -94,6 +94,30 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- category select dropdown -->
+                                <div class="input-dropdown-box">
+                                    <button id="pmaCategoryButton" class="dropdown-menu"
+                                        onclick="togglePMACategoryDropdown(event)">
+                                        All Categories
+                                        <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <div id="pmaCategoryDropdown" class="dropdown-content" style="display: none;">
+                                        <label class="dropdown-item">
+                                            <input type="checkbox" value="all" checked
+                                                onchange="handleAllPMACategoryChange(this)">
+                                            <span>All Categories</span>
+                                        </label>
+                                        <div id="pmaCategoryOptions">
+                                            <!-- Category options will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -145,6 +169,30 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- category select dropdown -->
+                                <div class="input-dropdown-box">
+                                    <button id="momCategoryButton" class="dropdown-menu"
+                                        onclick="toggleMOMCategoryDropdown(event)">
+                                        All Categories
+                                        <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <div id="momCategoryDropdown" class="dropdown-content" style="display: none;">
+                                        <label class="dropdown-item">
+                                            <input type="checkbox" value="all" checked
+                                                onchange="handleAllMOMCategoryChange(this)">
+                                            <span>All Categories</span>
+                                        </label>
+                                        <div id="momCategoryOptions">
+                                            <!-- Category options will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -180,49 +228,65 @@
     </section>
 
     <script>
+        // Supabase database config
         const SUPABASE_URL = 'https://ymimxlqqygezpkzqcejp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltaW14bHFxeWdlenBrenFjZWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1OTA3OTAsImV4cCI6MjA0NzE2Njc5MH0.h_l5abS25u4OqHt4LDqC-Hl3XQtwQ6pW7SgnoBEaTRU';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // Global variables to store data
         let masterData, isinData, monthlyData;
         let months = [];
+        let categoryData = []; // Stores unique categories
 
-        function formatIndianNumber(number) {
-            const parts = number.toString().split('.');
-            parts[0] = parts[0].replace(/(\d)(?=(\d\d)+\d$)/g, "$1,");
-            return parts.join('.');
-        }
-
+        // fetches and processes data from supabase database
         async function fetchData() {
+            // Show loading indicator while fetching data
             showLoading(true);
             try {
+                // Fetch master table data
                 const { data: master, error: masterError } = await supabase
                     .from('master')
                     .select('*');
                 if (masterError) throw masterError;
 
+                // Initialize array for ISIN data
                 let allIsinData = [];
                 let page = 0;
-                const pageSize = 1000;
+                const pageSize = 1000; // Number of records per page
+
+                // Fetch ISIN data in batches to handle large datasets
                 while (true) {
+
+                    // Fetch a batch of ISIN records
                     const { data: isin, error: isinError } = await supabase
                         .from('isin')
                         .select('*')
                         .range(page * pageSize, (page + 1) * pageSize - 1);
-                    
+
                     if (isinError) throw isinError;
 
+                    // Append current batch to allIsinData array
                     allIsinData = allIsinData.concat(isin);
 
+                    // Break the loop if we received fewer records than pageSize indicating we've reached the end
                     if (isin.length < pageSize) break;
                     page++;
                 }
 
+                // Store fetched data in global variables
                 masterData = master;
                 isinData = allIsinData;
 
-                const amcs = [...new Set(masterData.map(fund => fund['AMC']))]; //mom amc options
-                const pmaAMCOptions = document.getElementById('pmaAMCOptions'); //pma amc options
+                // Extract unique categories and populate dropdowns
+                categoryData = [...new Set(masterData.map(fund => fund['Category']))];
+
+                // Extract unique AMC values from master data
+                const amcs = [...new Set(masterData.map(fund => fund['AMC']))];
+
+                // Get reference to PMA AMC options container
+                const pmaAMCOptions = document.getElementById('pmaAMCOptions');
+
+                // If container exists, populate it with checkboxes for each AMC
                 if (pmaAMCOptions) {
                     pmaAMCOptions.innerHTML = amcs.map(amc => `
                         <label class="dropdown-item">
@@ -232,78 +296,140 @@
                     `).join('');
                 }
 
+                // Populate PMA category options
+                const pmaCategoryOptions = document.getElementById('pmaCategoryOptions');
+                if (pmaCategoryOptions) {
+                    pmaCategoryOptions.innerHTML = categoryData.map(category => `
+                        <label class="dropdown-item">
+                        <input type="checkbox" value="${category}" checked onchange="handlePMACategoryOptionChange()">
+                        <span>${category}</span>
+                        </label>
+                    `).join('');
+                }
+
+                // Populate MOM category options
+                const momCategoryOptions = document.getElementById('momCategoryOptions');
+                if (momCategoryOptions) {
+                    momCategoryOptions.innerHTML = categoryData.map(category => `
+                        <label class="dropdown-item">
+                        <input type="checkbox" value="${category}" checked onchange="handleMOMCategoryOptionChange()">
+                        <span>${category}</span>
+                        </label>
+                    `).join('');
+                }
+
+                // Fetch monthly data and update UI
                 await fetchMonthlyData();
                 renderPerMonthAnalysis();
             } catch (error) {
+
+                // Handle any errors that occur during data fetching
                 console.error('Error fetching data:', error);
                 alert('An error occurred while fetching data. Please try again later.');
             } finally {
+
+                // Hide loading indicator regardless of success or failure
                 showLoading(false);
             }
         }
 
+        // Fetches monthly data for per month analysis
         async function fetchMonthlyData() {
+
+            // Initialize empty object to store monthly data for all funds
             monthlyData = {};
+
+            // Iterate through each fund in masterData
             for (const fund of masterData) {
-                const { data, error } = await supabase.from(fund['Database Table']).select('*');
+
+                // Fetch data from fund-specific database table
+                const { data, error } = await supabase
+                    .from(fund['Database Table'])
+                    .select('*');
+
+                // Handle any errors during data fetch
                 if (error) {
                     console.error(`Error fetching data for ${fund['Fund Name']}:`, error);
-                    continue;
+                    continue; // Skip to next fund if there's an error
                 }
+
+                // Store fund's monthly data in global monthlyData object
                 monthlyData[fund['Fund Name']] = data;
+
+                // Extract unique months from the data
                 months = [...new Set([...months, ...data.map(d => d['Month'])])];
             }
+
+            // Sort months chronologically
             months.sort((a, b) => new Date(a) - new Date(b));
+
+            // Update the month dropdown in the UI with new data
             updateMonthDropdown();
         }
 
+        // Toggle per month analysis category dropdowns
+        function togglePMACategoryDropdown(event) {
+            event.preventDefault();
+            const dropdown = document.getElementById('pmaCategoryDropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Toggle month on month analysis category dropdowns
+        function toggleMOMCategoryDropdown(event) {
+            event.preventDefault();
+            const dropdown = document.getElementById('momCategoryDropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Fetches and processes month-on-month data for month-on-month analysis
         async function fetchMonthOnMonthData() {
             try {
-                console.log('Fetching master data...');
+                // Step 1: Fetch master data from Supabase
                 const { data: masterData, error: masterError } = await supabase
                     .from('master')
                     .select('*');
 
+                // Handle any errors in master data fetch
                 if (masterError) {
                     console.error('Error fetching master data:', masterError);
                     throw masterError;
                 }
 
-                console.log('Master data fetched successfully:', masterData);
-
-                // Fetch monthly data for each fund
+                // Step 2: Fetch monthly data for each fund
                 let allMonthlyData = [];
                 for (const fund of masterData) {
                     const tableName = fund['Database Table'];
                     console.log(`Fetching monthly data for ${fund['Fund Name']} from table ${tableName}...`);
 
+                    // Fetch monthly data from fund-specific table
                     const { data: monthlyData, error: monthlyError } = await supabase
                         .from(tableName)
                         .select('*');
 
+                    // Handle any errors in monthly data fetch
                     if (monthlyError) {
                         console.error(`Error fetching monthly data for ${fund['Fund Name']}:`, monthlyError);
                         throw monthlyError;
                     }
 
-                    console.log(`Monthly data fetched successfully for ${fund['Fund Name']}:`, monthlyData);
-
-                    // Add fund name to each monthly data entry
+                    // Add fund name to each monthly entry for identification
                     const monthlyDataWithFund = monthlyData.map(entry => ({ ...entry, 'Fund Name': fund['Fund Name'] }));
                     allMonthlyData = allMonthlyData.concat(monthlyDataWithFund);
                 }
 
-                console.log('All monthly data fetched successfully:', allMonthlyData);
+                // Step 3: Process AMC options for UI
+                // Extract unique AMCs from master data
+                const amcs = [...new Set(masterData.map(fund => fund['AMC']))]; // per month analysis amc
+                const momAMCOptions = document.getElementById('momAMCOptions'); // month on month analysis amc
 
-                const amcs = [...new Set(masterData.map(fund => fund['AMC']))];
-                const momAMCOptions = document.getElementById('momAMCOptions');
+                // Populate AMC dropdown options if element exists
                 if (momAMCOptions) {
                     momAMCOptions.innerHTML = amcs.map(amc => `
-                <label class="dropdown-item">
-                    <input type="checkbox" value="${amc}" checked onchange="handleAMCOptionChange()">
-                    <span>${amc}</span>
-                </label>
-            `).join('');
+                        <label class="dropdown-item">
+                            <input type="checkbox" value="${amc}" checked onchange="handleAMCOptionChange()">
+                            <span>${amc}</span>
+                        </label>
+                    `).join('');
                 }
 
                 // Sort months in ascending order, starting from August 24
@@ -367,42 +493,84 @@
             return Array.from(document.getElementById('momAMCSelect').selectedOptions).map(option => option.value);
         }
 
+        // Render per month analysis table
         function renderPerMonthAnalysis() {
+            // required dom elements
+            const monthSelect = document.getElementById('monthSelect');
+            const pmaTable = document.getElementById('pmaTable');
+
+            // validate required elements exist
+            if (!monthSelect || !pmaTable) {
+                console.error('Required elements for renderPerMonthAnalysis not found.');
+                return;
+            }
+
+            // Get selected month index and validate
             const monthIndex = parseInt(document.getElementById('monthSelect').value);
             if (isNaN(monthIndex)) return;
 
+            // Get selected data type (Quantity/Market Value/% to Nav)
             const dataType = document.querySelector('input[name="pcaDataType"]:checked').value;
+
+            // Get table elements
             const table = document.getElementById('pmaTable');
             const thead = table.querySelector('thead tr');
             const tbody = table.querySelector('tbody');
 
+            // Set up table header with sort functionality
             thead.innerHTML = `
                 <th onclick="sortTable('pmaTable', 0)" class="head-main">Stock Name</th>
                 <th onclick="sortTable('pmaTable', 1)" class="head-list">Consolidated Change</th>
             `;
+
+            // Get selected AMCs and add columns for each
             const selectedAMCs = getSelectedPMAAMCs();
             selectedAMCs.forEach((amc, index) => {
                 thead.innerHTML += `<th onclick="sortTable('pmaTable', ${index + 2})" class="head-list">${amc}</th>`;
             });
 
+            // Clear existing table body
             tbody.innerHTML = '';
-            const stocks = [...new Set(Object.values(monthlyData).flatMap(data => data.map(d => d['ISIN Code'])))];
 
+            // Get selected categories
+            const selectedCategories = getSelectedPMACategories();
+
+            // Filter masterData based on selected categories
+            const filteredMasterData = masterData.filter(fund =>
+                selectedCategories.includes('all') || selectedCategories.includes(fund['Category'])
+            );
+
+            // Get unique list of stocks from filtered monthly data
+            const stocks = [...new Set(filteredMasterData.flatMap(fund =>
+                monthlyData[fund['Fund Name']].map(d => d['ISIN Code'])
+            ))];
+
+            // Iterate through each stock to create table rows
             stocks.forEach(stock => {
                 const row = tbody.insertRow();
                 const stockNameCell = row.insertCell();
+
+                // Add stock name and symbol cell
                 stockNameCell.innerHTML = `${getStockName(stock)}<br><span class="symbol">${getStockSymbol(stock)}</span>`;
                 stockNameCell.className = 'sticky-cell';
 
+                // Initialize consolidated change tracking
                 let consolidatedChange = 0;
                 const consolidatedCell = row.insertCell();
 
+                // Process each selected AMC
                 selectedAMCs.forEach((amc, index) => {
-                    const amcFunds = masterData.filter(fund => fund['AMC'] === amc);
+                    // Get funds for current AMC that match the selected categories
+                    const amcFunds = filteredMasterData.filter(fund => fund['AMC'] === amc);
                     let month0Value = 0, month1Value = 0;
+
+                    // Calculate total values across all funds for this AMC
                     amcFunds.forEach(fund => {
+                        // Get data for consecutive months
                         const month0Data = monthlyData[fund['Fund Name']].find(d => d['ISIN Code'] === stock && d['Month'] === months[monthIndex]);
                         const month1Data = monthlyData[fund['Fund Name']].find(d => d['ISIN Code'] === stock && d['Month'] === months[monthIndex + 1]);
+
+                        // If data exists for both months, calculate values based on selected data type
                         if (month0Data && month1Data) {
                             if (dataType === 'Quantity') {
                                 month0Value += parseFloat(month0Data['Quantity']) || 0;
@@ -416,11 +584,14 @@
                             }
                         }
                     });
+
+                    // Calculate and display change for this AMC
                     const change = month1Value - month0Value;
                     consolidatedChange += change;
                     row.insertCell().textContent = formatIndianNumber(change.toFixed(2));
                 });
 
+                // Display consolidated change for all AMCs
                 consolidatedCell.textContent = formatIndianNumber(consolidatedChange.toFixed(2));
             });
         }
@@ -440,8 +611,18 @@
                 thead.innerHTML += `<th onclick="sortTable('momTable', ${index + 1})" class="head-list">${monthName} ${year} Change</th>`;
             });
 
-            // Get all unique stocks
-            const stocks = [...new Set(monthlyData.map(item => item['ISIN Code']))];
+            // Get selected categories
+            const selectedCategories = getSelectedMOMCategories();
+
+            // Filter masterData based on selected categories
+            const filteredMasterData = masterData.filter(fund =>
+                selectedCategories.includes('all') || selectedCategories.includes(fund['Category'])
+            );
+
+            // Get all unique stocks from filtered data
+            const stocks = [...new Set(monthlyData.filter(item =>
+                filteredMasterData.some(fund => fund['Fund Name'] === item['Fund Name'])
+            ).map(item => item['ISIN Code']))];
 
             // Prepare table body data
             const tableData = stocks.map(stock => {
@@ -454,7 +635,7 @@
 
                     let consolidatedChange = 0;
                     selectedAMCs.forEach(amc => {
-                        const amcFunds = masterData.filter(fund => fund['AMC'] === amc);
+                        const amcFunds = filteredMasterData.filter(fund => fund['AMC'] === amc);
                         amcFunds.forEach(fund => {
                             const prevMonthData = monthlyData.find(d => d['ISIN Code'] === stock && d['Month'] === months[monthIndex - 1] && d['Fund Name'] === fund['Fund Name']);
                             const currentMonthData = monthlyData.find(d => d['ISIN Code'] === stock && d['Month'] === month && d['Fund Name'] === fund['Fund Name']);
@@ -576,6 +757,90 @@
             updateTable();
         }
 
+        // Add this function to handle "All Categories" checkbox for PMA
+        function handleAllPMACategoryChange(checkbox) {
+            const options = document.querySelectorAll('#pmaCategoryOptions input[type="checkbox"]');
+            options.forEach(option => {
+                option.checked = checkbox.checked;
+            });
+            updatePMACategoryButtonText();
+            renderPerMonthAnalysis();
+        }
+
+        // Add this function to handle "All Categories" checkbox for MOM
+        function handleAllMOMCategoryChange(checkbox) {
+            const options = document.querySelectorAll('#momCategoryOptions input[type="checkbox"]');
+            options.forEach(option => {
+                option.checked = checkbox.checked;
+            });
+            updateMOMCategoryButtonText();
+            updateTable();
+        }
+
+        function handlePMACategoryOptionChange() {
+            const allCheckbox = document.querySelector('#pmaCategoryDropdown input[value="all"]');
+            const options = document.querySelectorAll('#pmaCategoryOptions input[type="checkbox"]');
+            const allChecked = Array.from(options).every(option => option.checked);
+            allCheckbox.checked = allChecked;
+
+            const selectedCategories = getSelectedPMACategories();
+            const button = document.getElementById('pmaCategoryButton');
+
+            if (selectedCategories.length === 0 || (selectedCategories.length === 1 && selectedCategories[0] === 'all')) {
+                button.textContent = 'All Categories';
+            } else {
+                button.textContent = `${selectedCategories.length} Categories selected`;
+            }
+
+            // Add the dropdown icon back
+            button.innerHTML = button.textContent + '<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z"></path></svg>';
+
+            // Call renderPerMonthAnalysis to update the table
+            renderPerMonthAnalysis();
+            updatePMACategoryButtonText();
+        }
+
+        function handleMOMCategoryOptionChange() {
+            const allCheckbox = document.querySelector('#momCategoryDropdown input[value="all"]');
+            const options = document.querySelectorAll('#momCategoryOptions input[type="checkbox"]');
+            const allChecked = Array.from(options).every(option => option.checked);
+            allCheckbox.checked = allChecked;
+            updateMOMCategoryButtonText();
+            updateTable();
+        }
+
+        function updateMOMCategoryButtonText() {
+            const button = document.getElementById('momCategoryButton');
+            const allCheckbox = document.querySelector('#momCategoryDropdown input[value="all"]');
+            const selectedOptions = document.querySelectorAll('#momCategoryOptions input[type="checkbox"]:checked');
+
+            if (allCheckbox.checked) {
+                button.textContent = 'All Categories';
+            } else if (selectedOptions.length === 0) {
+                button.textContent = 'Select Categories';
+            } else {
+                button.textContent = `${selectedOptions.length} Categories selected`;
+            }
+
+            button.innerHTML = button.textContent + '<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z"></path></svg>';
+        }
+
+        function updatePMACategoryButtonText() {
+            const button = document.getElementById('pmaCategoryButton');
+            const allCheckbox = document.querySelector('#pmaCategoryDropdown input[value="all"]');
+            const selectedOptions = document.querySelectorAll('#pmaCategoryOptions input[type="checkbox"]:checked');
+
+            if (allCheckbox.checked) {
+                button.textContent = 'All Categories';
+            } else if (selectedOptions.length === 0) {
+                button.textContent = 'Select Categories';
+            } else {
+                button.textContent = `${selectedOptions.length} Categories selected`;
+            }
+
+            button.innerHTML = button.textContent + '<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z"></path></svg>';
+        }
+
         function handlePMAAMCOptionChange() {
             const allCheckbox = document.querySelector('#pmaAMCDropdown input[value="all"]');
             const options = document.querySelectorAll('#pmaAMCOptions input[type="checkbox"]');
@@ -635,6 +900,25 @@
             return Array.from(options).map(option => option.value);
         }
 
+        // Add these functions to get selected categories
+        function getSelectedPMACategories() {
+            const allCheckbox = document.querySelector('#pmaCategoryDropdown input[value="all"]');
+            if (allCheckbox.checked) {
+                return ['all'];
+            }
+            const options = document.querySelectorAll('#pmaCategoryOptions input[type="checkbox"]:checked');
+            return Array.from(options).map(option => option.value);
+        }
+
+        function getSelectedMOMCategories() {
+            const allCheckbox = document.querySelector('#momCategoryDropdown input[value="all"]');
+            if (allCheckbox.checked) {
+                return ['all'];
+            }
+            const options = document.querySelectorAll('#momCategoryOptions input[type="checkbox"]:checked');
+            return Array.from(options).map(option => option.value);
+        }
+
         function updateTable() {
             const selectedAMCs = getSelectedAMCs();
             renderMonthOnMonthTable(masterData, allMonthlyData, selectedAMCs, months);
@@ -652,6 +936,8 @@
                 fetchMonthOnMonthData();
                 updateMonthDropdown(); // This will now select the latest month and render the table
             });
+
+            document.getElementById('pmaCategoryOptions').addEventListener('change', handlePMACategoryOptionChange);
         }
 
         function showTab(tabId) {
@@ -670,6 +956,13 @@
 
             // Add 'active' class to the clicked tab item
             document.querySelector(`.tab-item[onclick="showTab('${tabId}')"]`).classList.add('active');
+        }
+ 
+        // Formats numbers in Indian number system (with commas)
+        function formatIndianNumber(number) {
+            const parts = number.toString().split('.');
+            parts[0] = parts[0].replace(/(\d)(?=(\d\d)+\d$)/g, "$1,");
+            return parts.join('.');
         }
 
         // Add event listeners to tab items
@@ -698,6 +991,26 @@
                 }
             });
 
+            // Add event listener for MOM "All Categories" checkbox
+            const allMOMCategoriesCheckbox = document.querySelector('#momCategoryDropdown input[value="all"]');
+            allMOMCategoriesCheckbox.addEventListener('change', (event) => handleAllMOMCategoryChange(event.target));
+
+            // Add event listener for MOM individual category checkboxes
+            const momCategoryOptions = document.querySelectorAll('#momCategoryOptions input[type="checkbox"]');
+            momCategoryOptions.forEach(option => {
+                option.addEventListener('change', handleMOMCategoryOptionChange);
+            });
+
+            // Add event listener for "All Categories" checkbox
+            const allCategoriesCheckbox = document.querySelector('#pmaCategoryDropdown input[value="all"]');
+            allCategoriesCheckbox.addEventListener('change', (event) => handleAllPMACategoryChange(event.target));
+
+            // Add event listener for individual category checkboxes
+            const categoryOptions = document.querySelectorAll('#pmaCategoryOptions input[type="checkbox"]');
+            categoryOptions.forEach(option => {
+                option.addEventListener('change', handlePMACategoryOptionChange);
+            });
+
             document.getElementById('pmaAMCOptions').addEventListener('change', handlePMAAMCOptionChange);
 
             // Add event listener for AMC option changes
@@ -710,6 +1023,9 @@
 
         fetchData();
         addEventListeners();
+
+        // Initial render
+        renderPerMonthAnalysis();
     </script>
 </body>
 
