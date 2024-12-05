@@ -93,6 +93,12 @@ h1 {
     color: var(--color-text-high);
 }
 
+h2 {
+    font: 600 16px/22px "Manrope", sans-serif;
+    color: var(--color-text-high);
+    margin: 0px;
+}
+
 .description {
     font: 400 14px/20px "Manrope", sans-serif;
     color: var(--color-text-mid);
@@ -224,6 +230,7 @@ h1 {
     padding: 4px;
     background-color: white;
     gap: 2px;
+    border-radius: 4px;
 }
 
 .seg-btn input[type="radio"] {
@@ -240,6 +247,7 @@ h1 {
 .seg-btn input[type="radio"]:checked + label {
     background-color: var(--color-bg-layer0);
     color: var(--color-text-high);
+    border-radius: 2px;
 }
 
 .suffix-menu {
@@ -443,7 +451,17 @@ td {
     display: none;
 }
 
-@media only screen and (max-width: 480px) {
+.error-msg {
+    background-color: var(--color-bg-white);
+    min-height: 400px;
+
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+@media only screen and (max-width: 780px) {
     .table-menu {
         flex-direction: column;
         gap: 8px;
