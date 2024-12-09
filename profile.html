@@ -313,6 +313,11 @@
 
         function openModal(modalId) {
             document.getElementById(modalId).style.display = 'block';
+            if (modalId === 'editNameModal') {
+                document.getElementById('editName').value = document.getElementById('profileName').textContent;
+            } else if (modalId === 'editEmailModal') {
+                document.getElementById('editEmail').value = document.getElementById('profileEmail').textContent;
+            }
         }
 
         function closeModal(modalId) {
