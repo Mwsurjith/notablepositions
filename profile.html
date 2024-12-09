@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notable Positions | Consolidate Mutual fund portfolio tracker</title>
+    <meta name="description"
+        content="Discover India’s first platform to consolidate and track mutual fund portfolios. Gain unparalleled insights into where mutual funds are investing their money. Stay ahead with detailed allocation trends and optimize your financial strategy.">
+    <meta name="keywords"
+        content="India mutual fund tracker, consolidated portfolio platform, mutual fund investment insights, track mutual fund investments, fund allocation analysis India, mutual fund portfolio India, investment tracking tool, mutual fund trends, mutual fund analysis India">
+
+    <link rel="icon" href="Assets/favicon.ico" type="image/x-icon">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <section id="navSection" class="nav-section">
+        <div class="container">
+            <div class="nav-content-div">
+                <a href="index.html" class="logo-item">
+                    <img src="Assets/logo-notable-positions.svg" alt="Notable positions Logo">
+                </a>
+
+                <div class="nav-menu-div">
+                    <a href="index.html" class="nav-menu-item">All AMC</a>
+                    <a href="your-fundlist.html" class="nav-menu-item">Your Fundlist</a>
+                    <a href="profile.html" class="nav-menu-item active">Profile</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="loadingIndicator">Loading...</div>
+
+    <section id="profileLoginSection" class="main-section hidden">
+        <div class="profile-container">
+            <div class="main-content-div">
+                <div class="tabs-div" id="loginTabs">
+                    <div class="tab-item active" onclick="showTab('signUpForm')">Sign Up</div>
+                    <div class="tab-item" onclick="showTab('loginForm')">Login</div>
+                </div>
+
+                <div class="form-div" id="signUpFormDiv">
+                    <h2>Sign Up for Free</h2>
+                    <form id="signupForm" class="form-list">
+                        <input type="text" id="signupName" class="input-field" placeholder="Enter your full name"
+                            required>
+                        <input type="email" id="signupEmail" class="input-field" placeholder="Enter your email address"
+                            required>
+                        <div class="phone-input">
+                            <select id="countryCode" class="input-field">
+                                <option value="+91">+91 (IN)</option>
+                                <option value="+1">+1 (US)</option>
+                                <option value="+44">+44 (UK)</option>
+                                <!-- Add more country codes as needed -->
+                            </select>
+                            <input type="tel" id="signupPhone" class="input-field"
+                                placeholder="Enter your phone number (optional)">
+                        </div>
+                        <input type="password" id="signupPassword" class="input-field" placeholder="Create new password"
+                            required>
+                        <button type="submit" class="btn-primary">Sign Up</button>
+                    </form>
+                </div>
+
+                <div class="form-div" id="loginFormDiv" style="display: none;">
+                    <h2>Login to your account</h2>
+                    <form id="loginForm" class="form-list">
+                        <input type="email" id="loginEmail" class="input-field" placeholder="Email" required>
+                        <input type="password" id="loginPassword" class="input-field" placeholder="Password" required>
+                        <button type="submit" class="btn-primary">Login</button>
+                    </form>
+                    <button id="forgotPasswordBtn" class="btn-secondary">Forgot Password?</button>
+                </div>
+
+                <div class="form-div" id="forgotPasswordDiv" style="display: none;">
+                    <h2>Forgot Password</h2>
+                    <form id="forgotPasswordForm" class="form-list">
+                        <input type="email" id="forgotPasswordEmail" class="input-field" placeholder="Enter your email address" required>
+                        <button type="submit" class="btn-primary">Reset Password</button>
+                    </form>
+                    <button id="backToLoginBtn" class="btn-secondary">Back to Login</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="profileViewSection" class="main-section hidden">
+        <div class="profile-container">
+            <div id="profilePage" class="main-content-div">
+                <div class="h1-profile-div">
+                    <h1>Profile</h2>
+                        <div class="btn-grp">
+                            <button id="signOutButton" class="btn-primary">Log out</button>
+                        </div>
+                </div>
+
+                <div id="allFundsList" class="list-div">
+                    <div id="profileNameItem" class="list-card-div">
+                        <div class="list-prefix">
+                            <p id="profileName" class="list-high-emp"></p>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="list-suffix">
+                            <p class="list-mid-emp">Name</p>
+                        </div>
+                    </div>
+
+                    <div id="profileEmailItem" class="list-card-div">
+                        <div class="list-prefix">
+                            <p id="profileEmail" class="list-high-emp"></p>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="list-suffix">
+                            <p class="list-mid-emp">Password</p>
+                        </div>
+                    </div>
+
+                    <div id="profilePasswordItem" class="list-card-div">
+                        <div class="list-prefix">
+                            <p id="passwordLastUpdated" class="list-high-emp"></p>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="list-suffix">
+                            <p class="list-mid-emp">Password Last Updated</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Edit Name Modal -->
+    <div id="editNameModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Name</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-main">
+                <form id="editNameForm" class="form-list">
+                    <input type="text" class="input-field" id="editName" required>
+                    <button type="submit" class="btn-primary">Update Name</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Email Modal -->
+    <div id="editEmailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Email</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-main">
+                <form id="editEmailForm" class="form-list">
+                    <input type="email" class="input-field" id="editEmail" required>
+                    <button type="submit" class="btn-primary">Update Email</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Password Modal -->
+    <div id="editPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Change Password</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-main">
+                <form id="editPasswordForm" class="form-list">
+                    <input type="password" class="input-field" id="currentPassword" placeholder="Current Password" required>
+                    <input type="password" class="input-field" id="newPassword" placeholder="New Password" required>
+                    <button type="submit" class="btn-primary">Update Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ymimxlqqygezpkzqcejp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltaW14bHFxeWdlenBrenFjZWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1OTA3OTAsImV4cCI6MjA0NzE2Njc5MH0.h_l5abS25u4OqHt4LDqC-Hl3XQtwQ6pW7SgnoBEaTRU';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function showTab(tabName) {
+            document.getElementById('signUpFormDiv').style.display = tabName === 'signUpForm' ? 'flex' : 'none';
+            document.getElementById('loginFormDiv').style.display = tabName === 'loginForm' ? 'flex' : 'none';
+            document.getElementById('forgotPasswordDiv').style.display = tabName === 'forgotPasswordForm' ? 'flex' : 'none';
+            document.querySelectorAll('#loginTabs .tab-item').forEach(tab => {
+                tab.classList.toggle('active', tab.getAttribute('onclick').includes(tabName));
+            });
+        }
+
+        async function updateUIBasedOnAuthState(user) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const profileLoginSection = document.getElementById('profileLoginSection');
+            const profileViewSection = document.getElementById('profileViewSection');
+
+            loadingIndicator.classList.add('hidden');
+
+            if (user) {
+                profileLoginSection.classList.add('hidden');
+                profileViewSection.classList.remove('hidden');
+
+                document.getElementById('profileName').textContent = user.user_metadata.full_name || user.email;
+                document.getElementById('profileEmail').textContent = user.email;
+
+                // Fetch the password_last_updated date from the profiles table
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('password_last_updated')
+                    .eq('user_id', user.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error fetching password last updated date:', error);
+                } else if (data) {
+                    const lastUpdated = new Date(data.password_last_updated);
+                    document.getElementById('passwordLastUpdated').textContent = lastUpdated.toLocaleDateString();
+                }
+            } else {
+                profileViewSection.classList.add('hidden');
+                profileLoginSection.classList.remove('hidden');
+            }
+        }
+
+        async function signUp(event) {
+            event.preventDefault();
+            const fullName = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+
+            try {
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: { data: { full_name: fullName } }
+                });
+                if (authError) throw authError;
+
+                if (authData.user) {
+                    const { error: profileError } = await supabase
+                        .from('profiles')
+                        .insert([{
+                            user_id: authData.user.id,
+                            full_name: fullName,
+                            email,
+                            password_last_updated: now
+                        }]);
+                    if (profileError) throw profileError;
+
+                    alert('Signed up successfully! Please check your email for verification.');
+                    showTab('loginForm');
+                }
+            } catch (error) {
+                alert('Error signing up: ' + error.message);
+            }
+        }
+
+        async function login(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                updateUIBasedOnAuthState(data.user);
+            } catch (error) {
+                alert('Error logging in: ' + error.message);
+            }
+        }
+
+        async function signOut() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                updateUIBasedOnAuthState(null);
+            } catch (error) {
+                alert('Error signing out: ' + error.message);
+            }
+        }
+
+        async function forgotPassword(event) {
+            event.preventDefault();
+            const email = document.getElementById('forgotPasswordEmail').value;
+
+            try {
+                const { error } = await supabase.auth.resetPasswordForEmail(email);
+                if (error) throw error;
+                alert('Password reset email sent. Please check your inbox.');
+                showTab('loginForm');
+            } catch (error) {
+                alert('Error resetting password: ' + error.message);
+            }
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function updateName(event) {
+            event.preventDefault();
+            const newName = document.getElementById('editName').value;
+            try {
+                const { data: { user }, error } = await supabase.auth.updateUser({
+                    data: { full_name: newName }
+                });
+                if (error) throw error;
+
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .update({ full_name: newName })
+                    .eq('user_id', user.id);
+                if (profileError) throw profileError;
+
+                document.getElementById('profileName').textContent = newName;
+                closeModal('editNameModal');
+                alert('Name updated successfully!');
+            } catch (error) {
+                alert('Error updating name: ' + error.message);
+            }
+        }
+
+        async function updateEmail(event) {
+            event.preventDefault();
+            const newEmail = document.getElementById('editEmail').value;
+            try {
+                const { data: { user }, error } = await supabase.auth.updateUser({ email: newEmail });
+                if (error) throw error;
+
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .update({ email: newEmail })
+                    .eq('user_id', user.id);
+                if (profileError) throw profileError;
+
+                document.getElementById('profileEmail').textContent = newEmail;
+                closeModal('editEmailModal');
+                alert('Email updated successfully! Please check your new email for verification.');
+            } catch (error) {
+                alert('Error updating email: ' + error.message);
+            }
+        }
+
+        async function updatePassword(event) {
+            event.preventDefault();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: document.getElementById('profileEmail').textContent,
+                    password: currentPassword
+                });
+                if (error) throw new Error('Current password is incorrect');
+
+                const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+                if (updateError) throw updateError;
+
+                const now = new Date().toISOString();
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .update({ password_last_updated: now })
+                    .eq('user_id', data.user.id);
+                if (profileError) throw profileError;
+
+                document.getElementById('passwordLastUpdated').textContent = new Date().toLocaleDateString();
+                closeModal('editPasswordModal');
+                alert('Password updated successfully!');
+            } catch (error) {
+                alert('Error updating password: ' + error.message);
+            }
+        }
+
+        supabase.auth.onAuthStateChange((event, session) => {
+            updateUIBasedOnAuthState(session?.user);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check the initial auth state
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                updateUIBasedOnAuthState(session?.user);
+            });
+
+            document.getElementById('signupForm').addEventListener('submit', signUp);
+            document.getElementById('loginForm').addEventListener('submit', login);
+            document.getElementById('signOutButton').addEventListener('click', signOut);
+            document.getElementById('forgotPasswordForm').addEventListener('submit', forgotPassword);
+            document.getElementById('forgotPasswordBtn').addEventListener('click', () => showTab('forgotPasswordForm'));
+            document.getElementById('backToLoginBtn').addEventListener('click', () => showTab('loginForm'));
+
+            document.querySelectorAll('#loginTabs .tab-item').forEach(tab => {
+                tab.addEventListener('click', function () {
+                    const tabName = this.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    showTab(tabName);
+                });
+            });
+
+            document.getElementById('profileNameItem').addEventListener('click', () => openModal('editNameModal'));
+            document.getElementById('profileEmailItem').addEventListener('click', () => openModal('editEmailModal'));
+            document.getElementById('profilePasswordItem').addEventListener('click', () => openModal('editPasswordModal'));
+
+            document.getElementById('editNameForm').addEventListener('submit', updateName);
+            document.getElementById('editEmailForm').addEventListener('submit', updateEmail);
+            document.getElementById('editPasswordForm').addEventListener('submit', updatePassword);
+
+            document.querySelectorAll('.close').forEach(closeBtn => {
+                closeBtn.addEventListener('click', function() {
+                    closeModal(this.closest('.modal').id);
+                });
+            });
+
+            window.onclick = function(event) {
+                if (event.target.classList.contains('modal')) {
+                    closeModal(event.target.id);
+                }
+            };
+        });
+    </script>
+</body>
+
+</html>

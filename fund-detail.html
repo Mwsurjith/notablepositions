@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notable Positions | Consolidate Mutual fund portfolio tracker</title>
-    <meta name="description" content="Discover India’s first platform to consolidate and track mutual fund portfolios. Gain unparalleled insights into where mutual funds are investing their money. Stay ahead with detailed allocation trends and optimize your financial strategy.">
-    <meta name="keywords" content="India mutual fund tracker, consolidated portfolio platform, mutual fund investment insights, track mutual fund investments, fund allocation analysis India, mutual fund portfolio India, investment tracking tool, mutual fund trends, mutual fund analysis India">
+    <meta name="description"
+        content="Discover India’s first platform to consolidate and track mutual fund portfolios. Gain unparalleled insights into where mutual funds are investing their money. Stay ahead with detailed allocation trends and optimize your financial strategy.">
+    <meta name="keywords"
+        content="India mutual fund tracker, consolidated portfolio platform, mutual fund investment insights, track mutual fund investments, fund allocation analysis India, mutual fund portfolio India, investment tracking tool, mutual fund trends, mutual fund analysis India">
 
     <link rel="icon" href="Assets/favicon.ico" type="image/x-icon">
 
@@ -17,6 +20,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
     <section id="navSection" class="nav-section">
         <div class="container">
@@ -59,7 +63,7 @@
                                     <option value="change">Change</option>
                                     <option value="value">Value</option>
                                 </select>
-    
+
                                 <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                     fill="currentColor">
                                     <path
@@ -69,7 +73,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <table id="fundTable" class="table-comp">
                         <thead>
                             <tr>
@@ -106,277 +110,278 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const urlParams = new URLSearchParams(window.location.search);
-    const amcName = urlParams.get('amc');
-    const fundName = urlParams.get('fund');
-    const aumSize = urlParams.get('aum');
+        const amcName = urlParams.get('amc');
+        const fundName = urlParams.get('fund');
+        const aumSize = urlParams.get('aum');
 
-    if (amcName && fundName) {
-        document.getElementById('fundName').textContent = decodeURIComponent(fundName);
-        document.getElementById('aumSize').textContent = aumSize ? `AUM: ${decodeURIComponent(aumSize)}` : 'AUM: Not available';
-        document.title = `${decodeURIComponent(fundName)} - Open Fund Box`;
-        const newUrl = `${window.location.origin}/${encodeURIComponent(amcName)}/${encodeURIComponent(fundName)}`;
-        history.pushState(null, '', newUrl);
-        fetchFundDetails();
-    } else {
-        document.getElementById('fundName').textContent = 'Fund Not Found';
-        document.getElementById('aumSize').textContent = 'Invalid fund parameters';
-    }
-
-    async function fetchFundDetails() {
-        try {
-            const { data: fundData, error: fundError } = await supabase
-                .from('master')
-                .select('*')
-                .eq('AMC', amcName)
-                .eq('Fund Name', fundName)
-                .single();
-
-            if (fundError) throw fundError;
-
-            if (!fundData) {
-                throw new Error('Fund data not found');
-            }
-
-            console.log('Fund data:', fundData); // Add this line for debugging
-
-            await Promise.all([
-                fetchMonthlyData(fundData['Database Table']),
-                fetchIsinData()
-            ]);
-
-            renderFundAnalysis();
-        } catch (error) {
-            console.error('Error fetching fund details:', error);
-            document.getElementById('fundName').textContent = 'Error Loading Fund';
-            document.getElementById('aumSize').textContent = 'Please try again later';
-        }
-    }
-
-    async function fetchMonthlyData(databaseTable) {
-        monthlyData = {};
-        let allData = [];
-        let page = 0;
-        const pageSize = 1000;
-        let hasMore = true;
-
-        while (hasMore) {
-            const { data, error, count } = await supabase
-                .from(databaseTable)
-                .select('*', { count: 'exact' })
-                .range(page * pageSize, (page + 1) * pageSize - 1);
-
-            if (error) {
-                console.error(`Error fetching data for ${fundName}:`, error);
-                break;
-            }
-
-            allData = allData.concat(data);
-            page++;
-            hasMore = data.length === pageSize;
-
-            console.log(`Fetched ${allData.length} rows out of ${count} for ${fundName}`);
+        if (amcName && fundName) {
+            document.getElementById('fundName').textContent = decodeURIComponent(fundName);
+            document.getElementById('aumSize').textContent = aumSize ? `AUM: ${decodeURIComponent(aumSize)}` : 'AUM: Not available';
+            document.title = `${decodeURIComponent(fundName)} - Open Fund Box`;
+            const newUrl = `${window.location.origin}/${encodeURIComponent(amcName)}/${encodeURIComponent(fundName)}`;
+            history.pushState(null, '', newUrl);
+            fetchFundDetails();
+        } else {
+            document.getElementById('fundName').textContent = 'Fund Not Found';
+            document.getElementById('aumSize').textContent = 'Invalid fund parameters';
         }
 
-        monthlyData[fundName] = allData;
-        months = [...new Set(allData.map(d => d['Month']))];
-        months.sort((a, b) => new Date(a) - new Date(b));
-    }
+        async function fetchFundDetails() {
+            try {
+                const { data: fundData, error: fundError } = await supabase
+                    .from('master')
+                    .select('*')
+                    .eq('AMC', amcName)
+                    .eq('Fund Name', fundName)
+                    .single();
 
-    async function fetchIsinData() {
-        let allData = [];
-        let page = 0;
-        const pageSize = 1000;
-        let hasMore = true;
+                if (fundError) throw fundError;
 
-        while (hasMore) {
-            const { data, error, count } = await supabase
-                .from('isin')
-                .select('"ISIN Code", "Stock Name", Symbol', { count: 'exact' })
-                .range(page * pageSize, (page + 1) * pageSize - 1);
-
-            if (error) {
-                console.error('Error fetching ISIN data:', error);
-                break;
-            }
-
-            allData = allData.concat(data);
-            page++;
-            hasMore = data.length === pageSize;
-
-            console.log(`Fetched ${allData.length} ISIN rows out of ${count}`);
-        }
-
-        isinData = allData;
-    }
-
-    function renderFundAnalysis() {
-        const table = document.getElementById('fundTable');
-        if (!table) {
-            console.error('fundTable not found');
-            return;
-        }
-
-        const thead = table.querySelector('thead');
-        const tbody = table.querySelector('tbody');
-        if (!thead || !tbody) {
-            console.error('thead or tbody not found in fundTable');
-            return;
-        }
-
-        thead.innerHTML = '';
-        tbody.innerHTML = '';
-
-        const headerRow = document.createElement('tr');
-    const stockHeader = document.createElement('th');
-    stockHeader.textContent = 'STOCK NAME';
-    stockHeader.className = 'head-main';
-    stockHeader.onclick = () => sortTable('fundTable', 0);
-    headerRow.appendChild(stockHeader);
-
-    months.forEach((month, index) => {
-        const th = document.createElement('th');
-        th.textContent = month.toUpperCase();
-        th.className = 'head-list';
-        th.onclick = () => sortTable('fundTable', index + 1);
-        headerRow.appendChild(th);
-    });
-
-    thead.appendChild(headerRow);
-
-        const stockData = {};
-        monthlyData[fundName].forEach(entry => {
-            const stockInfo = isinData.find(item => item['ISIN Code'] === entry['ISIN Code']);
-            const stockName = stockInfo ? stockInfo['Stock Name'] : entry['ISIN Code'];
-            const symbol = stockInfo ? stockInfo['Symbol'] : 'N/A';
-
-            if (!stockData[stockName]) {
-                stockData[stockName] = {
-                    symbol: symbol,
-                    values: {}
-                };
-            }
-            stockData[stockName].values[entry['Month']] = entry[getDataType()];
-        });
-
-        Object.entries(stockData).forEach(([stockName, data]) => {
-            const row = document.createElement('tr');
-            const nameCell = document.createElement('td');
-            nameCell.className = 'sticky-cell';
-            nameCell.innerHTML = `${stockName}<br> <span class="symbol">${data.symbol}</span>`;
-            row.appendChild(nameCell);
-
-            let previousValue = null;
-            months.forEach(month => {
-                const cell = document.createElement('td');
-                cell.className = 'value-cell';
-                const value = data.values[month] || 0;
-                cell.innerHTML = `${formatValue(value)}`;
-
-                if (previousValue !== null) {
-                    const change = value - previousValue;
-                    const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'none';
-                    const changeSign = change > 0 ? '+' : '';
-                    const changeValue = Math.abs(change);
-                    cell.innerHTML += `<br><span class="${changeClass}" data-change="${change.toFixed(2)}">${changeSign}${formatValue(changeValue)}</span>`;
-                } else {
-                    cell.innerHTML += `<br><span class="none" data-change="0">0.00</span>`;
+                if (!fundData) {
+                    throw new Error('Fund data not found');
                 }
 
-                row.appendChild(cell);
-                previousValue = value;
-            });
+                console.log('Fund data:', fundData); // Add this line for debugging
 
-            tbody.appendChild(row);
-        });
+                await Promise.all([
+                    fetchMonthlyData(fundData['Database Table']),
+                    fetchIsinData()
+                ]);
 
-        // After populating the table
-    const sortType = document.getElementById('fundSortType').value;
-    sortTable('fundTable', months.length, sortType);
-    }
-
-    function getDataType() {
-        const dataType = document.querySelector('input[name="fundDataType"]:checked').value;
-        switch (dataType) {
-            case 'Quantity':
-                return 'Quantity';
-            case 'Market Value':
-                return 'Market Value';
-            case '% to Nav':
-                return '% to Nav';
-            default:
-                return 'Quantity';
-        }
-    }
-
-    function formatValue(value) {
-        const dataType = getDataType();
-        if (dataType === 'Quantity') {
-            return Math.round(value).toLocaleString();
-        } else if (dataType === 'Market Value') {
-            return value.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
-        } else {
-            return value.toFixed(2) + '%';
-        }
-    }
-
-    function sortTable(tableId, columnIndex) {
-    const table = document.getElementById(tableId);
-    const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    const sortType = document.getElementById('fundSortType').value;
-
-    rows.sort((a, b) => {
-        const aCell = a.cells[columnIndex];
-        const bCell = b.cells[columnIndex];
-        
-        if (columnIndex === 0) {
-            // Sort by stock name
-            return aCell.textContent.localeCompare(bCell.textContent);
-        } else {
-            if (sortType === 'value') {
-                const aValue = parseFloat(aCell.textContent.split('\n')[0].replace(/[^0-9.-]+/g, ""));
-                const bValue = parseFloat(bCell.textContent.split('\n')[0].replace(/[^0-9.-]+/g, ""));
-                return bValue - aValue;
-            } else if (sortType === 'change') {
-                const aChange = parseFloat(aCell.querySelector('[data-change]').dataset.change);
-                const bChange = parseFloat(bCell.querySelector('[data-change]').dataset.change);
-                return bChange - aChange;
+                renderFundAnalysis();
+            } catch (error) {
+                console.error('Error fetching fund details:', error);
+                document.getElementById('fundName').textContent = 'Error Loading Fund';
+                document.getElementById('aumSize').textContent = 'Please try again later';
             }
         }
-    });
 
-    tbody.innerHTML = '';
-    rows.forEach(row => tbody.appendChild(row));
-}
+        async function fetchMonthlyData(databaseTable) {
+            monthlyData = {};
+            let allData = [];
+            let page = 0;
+            const pageSize = 1000;
+            let hasMore = true;
 
-    const dataTypeRadios = document.querySelectorAll('input[name="fundDataType"]');
-    if (dataTypeRadios) {
-        dataTypeRadios.forEach(radio => {
-            radio.addEventListener('change', renderFundAnalysis);
-        });
-    }
+            while (hasMore) {
+                const { data, error, count } = await supabase
+                    .from(databaseTable)
+                    .select('*', { count: 'exact' })
+                    .range(page * pageSize, (page + 1) * pageSize - 1);
 
-    const fundSortType = document.getElementById('fundSortType');
-if (fundSortType) {
-    fundSortType.addEventListener('change', () => {
-        const currentSortColumn = document.querySelector('th.sorted');
-        const columnIndex = currentSortColumn ? Array.from(currentSortColumn.parentNode.children).indexOf(currentSortColumn) : months.length;
-        sortTable('fundTable', columnIndex);
-        
-    });
-}
+                if (error) {
+                    console.error(`Error fetching data for ${fundName}:`, error);
+                    break;
+                }
 
-function updateSortedColumn(columnIndex) {
-    const headers = document.querySelectorAll('#fundTable th');
-    headers.forEach((header, index) => {
-        if (index === columnIndex) {
-            header.classList.add('sorted');
-        } else {
-            header.classList.remove('sorted');
+                allData = allData.concat(data);
+                page++;
+                hasMore = data.length === pageSize;
+
+                console.log(`Fetched ${allData.length} rows out of ${count} for ${fundName}`);
+            }
+
+            monthlyData[fundName] = allData;
+            months = [...new Set(allData.map(d => d['Month']))];
+            months.sort((a, b) => new Date(a) - new Date(b));
         }
-    });
-}
-    
+
+        async function fetchIsinData() {
+            let allData = [];
+            let page = 0;
+            const pageSize = 1000;
+            let hasMore = true;
+
+            while (hasMore) {
+                const { data, error, count } = await supabase
+                    .from('isin')
+                    .select('"ISIN Code", "Stock Name", Symbol', { count: 'exact' })
+                    .range(page * pageSize, (page + 1) * pageSize - 1);
+
+                if (error) {
+                    console.error('Error fetching ISIN data:', error);
+                    break;
+                }
+
+                allData = allData.concat(data);
+                page++;
+                hasMore = data.length === pageSize;
+
+                console.log(`Fetched ${allData.length} ISIN rows out of ${count}`);
+            }
+
+            isinData = allData;
+        }
+
+        function renderFundAnalysis() {
+            const table = document.getElementById('fundTable');
+            if (!table) {
+                console.error('fundTable not found');
+                return;
+            }
+
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+            if (!thead || !tbody) {
+                console.error('thead or tbody not found in fundTable');
+                return;
+            }
+
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            const headerRow = document.createElement('tr');
+            const stockHeader = document.createElement('th');
+            stockHeader.textContent = 'STOCK NAME';
+            stockHeader.className = 'head-main';
+            stockHeader.onclick = () => sortTable('fundTable', 0);
+            headerRow.appendChild(stockHeader);
+
+            months.forEach((month, index) => {
+                const th = document.createElement('th');
+                th.textContent = month.toUpperCase();
+                th.className = 'head-list';
+                th.onclick = () => sortTable('fundTable', index + 1);
+                headerRow.appendChild(th);
+            });
+
+            thead.appendChild(headerRow);
+
+            const stockData = {};
+            monthlyData[fundName].forEach(entry => {
+                const stockInfo = isinData.find(item => item['ISIN Code'] === entry['ISIN Code']);
+                const stockName = stockInfo ? stockInfo['Stock Name'] : entry['ISIN Code'];
+                const symbol = stockInfo ? stockInfo['Symbol'] : 'N/A';
+
+                if (!stockData[stockName]) {
+                    stockData[stockName] = {
+                        symbol: symbol,
+                        values: {}
+                    };
+                }
+                stockData[stockName].values[entry['Month']] = entry[getDataType()];
+            });
+
+            Object.entries(stockData).forEach(([stockName, data]) => {
+                const row = document.createElement('tr');
+                const nameCell = document.createElement('td');
+                nameCell.className = 'sticky-cell';
+                nameCell.innerHTML = `${stockName}<br> <span class="symbol">${data.symbol}</span>`;
+                row.appendChild(nameCell);
+
+                let previousValue = null;
+                months.forEach(month => {
+                    const cell = document.createElement('td');
+                    cell.className = 'value-cell';
+                    const value = data.values[month] || 0;
+                    cell.innerHTML = `${formatValue(value)}`;
+
+                    if (previousValue !== null) {
+                        const change = value - previousValue;
+                        const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'none';
+                        const changeSign = change > 0 ? '+' : '';
+                        const changeValue = Math.abs(change);
+                        cell.innerHTML += `<br><span class="${changeClass}" data-change="${change.toFixed(2)}">${changeSign}${formatValue(changeValue)}</span>`;
+                    } else {
+                        cell.innerHTML += `<br><span class="none" data-change="0">0.00</span>`;
+                    }
+
+                    row.appendChild(cell);
+                    previousValue = value;
+                });
+
+                tbody.appendChild(row);
+            });
+
+            // After populating the table
+            const sortType = document.getElementById('fundSortType').value;
+            sortTable('fundTable', months.length, sortType);
+        }
+
+        function getDataType() {
+            const dataType = document.querySelector('input[name="fundDataType"]:checked').value;
+            switch (dataType) {
+                case 'Quantity':
+                    return 'Quantity';
+                case 'Market Value':
+                    return 'Market Value';
+                case '% to Nav':
+                    return '% to Nav';
+                default:
+                    return 'Quantity';
+            }
+        }
+
+        function formatValue(value) {
+            const dataType = getDataType();
+            if (dataType === 'Quantity') {
+                return Math.round(value).toLocaleString();
+            } else if (dataType === 'Market Value') {
+                return value.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+            } else {
+                return value.toFixed(2) + '%';
+            }
+        }
+
+        function sortTable(tableId, columnIndex) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const sortType = document.getElementById('fundSortType').value;
+
+            rows.sort((a, b) => {
+                const aCell = a.cells[columnIndex];
+                const bCell = b.cells[columnIndex];
+
+                if (columnIndex === 0) {
+                    // Sort by stock name
+                    return aCell.textContent.localeCompare(bCell.textContent);
+                } else {
+                    if (sortType === 'value') {
+                        const aValue = parseFloat(aCell.textContent.split('\n')[0].replace(/[^0-9.-]+/g, ""));
+                        const bValue = parseFloat(bCell.textContent.split('\n')[0].replace(/[^0-9.-]+/g, ""));
+                        return bValue - aValue;
+                    } else if (sortType === 'change') {
+                        const aChange = parseFloat(aCell.querySelector('[data-change]').dataset.change);
+                        const bChange = parseFloat(bCell.querySelector('[data-change]').dataset.change);
+                        return bChange - aChange;
+                    }
+                }
+            });
+
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        const dataTypeRadios = document.querySelectorAll('input[name="fundDataType"]');
+        if (dataTypeRadios) {
+            dataTypeRadios.forEach(radio => {
+                radio.addEventListener('change', renderFundAnalysis);
+            });
+        }
+
+        const fundSortType = document.getElementById('fundSortType');
+        if (fundSortType) {
+            fundSortType.addEventListener('change', () => {
+                const currentSortColumn = document.querySelector('th.sorted');
+                const columnIndex = currentSortColumn ? Array.from(currentSortColumn.parentNode.children).indexOf(currentSortColumn) : months.length;
+                sortTable('fundTable', columnIndex);
+
+            });
+        }
+
+        function updateSortedColumn(columnIndex) {
+            const headers = document.querySelectorAll('#fundTable th');
+            headers.forEach((header, index) => {
+                if (index === columnIndex) {
+                    header.classList.add('sorted');
+                } else {
+                    header.classList.remove('sorted');
+                }
+            });
+        }
+
     </script>
 </body>
+
 </html>
