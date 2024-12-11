@@ -1,22 +1,22 @@
 :root {
-    --color-text-high : #363530;
-    --color-text-mid : #797874;
-    --color-text-green : #3E7952;
-    --color-text-red : #793E3E;
-    --color-text-white : #FFFFFF;
+    --color-text-high: #363530;
+    --color-text-mid: #797874;
+    --color-text-green: #3E7952;
+    --color-text-red: #793E3E;
+    --color-text-white: #FFFFFF;
 
-    --color-bg-page : #F6F6F3;
-    --color-bg-white : #FFFFFF;
-    --color-bg-layer0 : #F6F6F3;
-    --color-bg-layer1 : #EEEEE7;
-    --color-bg-layer2 : #E1E0E0;
-    --color-bg-layer4 : #797874;
-    --color-bg-layer5 : #363530;
-    --color-bg-layer-none : #00000000;
+    --color-bg-page: #F6F6F3;
+    --color-bg-white: #FFFFFF;
+    --color-bg-layer0: #F6F6F3;
+    --color-bg-layer1: #EEEEE7;
+    --color-bg-layer2: #E1E0E0;
+    --color-bg-layer4: #797874;
+    --color-bg-layer5: #363530;
+    --color-bg-layer-none: #00000000;
 
-    --color-border-high : #363530;
-    --color-border-low : #E1E0E0;
-    --color-border-none : #00000000;
+    --color-border-high: #363530;
+    --color-border-low: #E1E0E0;
+    --color-border-none: #00000000;
 }
 
 body {
@@ -250,14 +250,14 @@ h2 {
     display: none;
 }
 
-.seg-btn input[type="radio"] + label {
+.seg-btn input[type="radio"]+label {
     font: 400 14px/20px "Manrope", sans-serif;
     padding: 4px;
     color: var(--color-text-mid);
     cursor: pointer;
 }
 
-.seg-btn input[type="radio"]:checked + label {
+.seg-btn input[type="radio"]:checked+label {
     background-color: var(--color-bg-layer0);
     color: var(--color-text-high);
     border-radius: 2px;
@@ -277,8 +277,8 @@ h2 {
     color: var(--color-text-mid);
 
     background-color: var(--color-bg-layer-none);
-    padding: 8px;
-    margin-right: 16px;
+    padding: 8px 32px 8px 8px;
+
 }
 
 .dropdown-menu:hover {
@@ -309,6 +309,15 @@ h2 {
     padding: 10px 0px;
     position: absolute;
     right: 8px;
+    pointer-events: none;
+}
+
+.dropdown-icon-2 {
+    width: 16px;
+    fill: var(--color-text-mid);
+    position: absolute;
+    right: 8px;
+    padding: 2px 0px;
     pointer-events: none;
 }
 
@@ -374,8 +383,10 @@ h2 {
 
 table {
     border-collapse: collapse;
-    width: 100%; /* Ensures table takes full width */
-    table-layout: fixed; /* Ensures equal distribution of column widths */
+    width: 100%;
+    /* Ensures table takes full width */
+    table-layout: fixed;
+    /* Ensures equal distribution of column widths */
 }
 
 th {
@@ -405,7 +416,7 @@ td {
     left: 0;
     z-index: 3;
     background-color: var(--color-bg-layer0);
-    border-right: 1px solid var(--color-border-low); 
+    border-right: 1px solid var(--color-border-low);
 }
 
 .head-list {
@@ -417,8 +428,27 @@ td {
 
     max-width: 200px;
     min-width: 200px;
-    text-overflow: ellipsis; /* Truncates text with ellipsis */
-    white-space: nowrap; /* Prevent text wrapping */
+    text-overflow: ellipsis;
+    /* Truncates text with ellipsis */
+    white-space: nowrap;
+}
+
+.head-main:hover {
+    color: var(--color-text-high);
+    background-color: var(--color-bg-layer1);
+}
+
+.head-list:hover {
+    color: var(--color-text-high);
+    background-color: var(--color-bg-layer1);
+}
+
+.head-main:hover .sort-path {
+    fill: var(--color-text-mid);
+}
+
+.head-list:hover .sort-path {
+    fill: var(--color-text-mid);
 }
 
 .sticky-cell {
@@ -431,8 +461,10 @@ td {
     overflow: hidden;
     border-right: 1px solid var(--color-border-low);
 
-    text-overflow: ellipsis; /* Truncates text with ellipsis */
-    white-space: nowrap; /* Prevent text wrapping */
+    text-overflow: ellipsis;
+    /* Truncates text with ellipsis */
+    white-space: nowrap;
+    /* Prevent text wrapping */
 }
 
 .value-cell {
@@ -464,9 +496,9 @@ td {
     display: none;
 }
 
-.error-msg {
+.add-msg-div {
     background-color: var(--color-bg-white);
-    min-height: 400px;
+    min-height: 200px;
 
     flex-direction: column;
     align-items: center;
@@ -558,7 +590,7 @@ td {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0, 0, 0, 0.4);
 }
 
 .modal-content {
@@ -608,6 +640,16 @@ td {
     display: none;
 }
 
+.sort-icon-div {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.sort-icon {
+    min-width: 16px;
+}
+
 @media only screen and (max-width: 780px) {
     .table-menu {
         flex-direction: column;
@@ -630,5 +672,10 @@ td {
 
     .table-div {
         padding: 0px 8px;
+    }
+
+    .dropdown-menu {
+        flex: 1;
+        text-align: left;
     }
 }
