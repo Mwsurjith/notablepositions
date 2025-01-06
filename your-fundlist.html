@@ -600,6 +600,8 @@
                 stockNameCell.className = 'sticky-cell';
 
                 let consolidatedChange = 0;
+                let amcBought = 0;
+                let amcSold = 0;
                 const consolidatedCell = row.insertCell();
 
                 let isStockHeldByAnyAMC = false;
@@ -628,6 +630,13 @@
 
                     const change = month1Value - month0Value;
                     consolidatedChange += change;
+                    
+                    // Count AMC buy/sell activity
+                    if (Math.abs(change) > 0) {
+                        if (change > 0) amcBought++;
+                        if (change < 0) amcSold--;
+                    }
+
                     const cellValue = formatIndianNumber(change.toFixed(2));
                     row.insertCell().textContent = cellValue;
 
@@ -636,7 +645,14 @@
                     }
                 });
 
-                consolidatedCell.textContent = formatIndianNumber(consolidatedChange.toFixed(2));
+                consolidatedCell.innerHTML = `
+                    ${formatIndianNumber(consolidatedChange.toFixed(2))}
+                    <div style="font-size: 12px; margin-top: 4px;">
+                        ${amcBought > 0 ? `<span style="color: #16a34a;">+${amcBought} bought</span>` : ''}
+                        ${amcBought > 0 && amcSold < 0 ? ' • ' : ''}
+                        ${amcSold < 0 ? `<span style="color: #dc2626;">${amcSold} sold</span>` : ''}
+                    </div>
+                `;
 
                 if (!isStockHeldByAnyAMC) {
                     row.remove();
@@ -725,6 +741,9 @@
                 // Skip first month and start calculations from second month  
                 months.slice(1).forEach((month, monthIndex) => {
                     let consolidatedChange = 0;
+                    let amcBought = 0;
+                    let amcSold = 0;
+
                     if (selectedCategories.length > 0) {
                         selectedAMCs.forEach(amc => {
                             const amcFunds = filteredMasterData.filter(fund => fund['AMC'] === amc);
@@ -752,14 +771,29 @@
                                         prevValue = parseFloat(prevMonthData['% to Nav']) || 0;
                                         currentValue = parseFloat(currentMonthData['% to Nav']) || 0;
                                     }
-                                    consolidatedChange += currentValue - prevValue;
+                                    const change = currentValue - prevValue;
+                                    consolidatedChange += change;
+
+                                    // Count AMC buy/sell activity
+                                    if (Math.abs(change) > 0) {
+                                        if (change > 0) amcBought++;
+                                        if (change < 0) amcSold--;
+                                    }
                                 }
                             });
                         });
                     }
 
                     const formattedChange = formatIndianNumber(consolidatedChange.toFixed(2));
-                    row.push(formattedChange);
+                    const cellContent = `
+                        ${formattedChange}
+                        <div style="font-size: 12px; margin-top: 4px;">
+                            ${amcBought > 0 ? `<span style="color: #16a34a;">+${amcBought} bought</span>` : ''}
+                            ${amcBought > 0 && amcSold < 0 ? ' • ' : ''}
+                            ${amcSold < 0 ? `<span style="color: #dc2626;">${amcSold} sold</span>` : ''}
+                        </div>
+                    `;
+                    row.push(cellContent);
 
                     if (formattedChange !== '0.00') {
                         isStockHeldByAnyAMC = true;

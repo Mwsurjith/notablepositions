@@ -74,6 +74,11 @@
                         </div>
                     </div>
 
+                    <div class="chart-section">
+                        <div class="chart-header"></div>
+                        <div id="barChart" class="bar-chart"></div>
+                    </div>
+
                     <table id="fundTable" class="table-comp">
                         <thead>
                             <tr>
@@ -118,7 +123,7 @@
             document.getElementById('fundName').textContent = decodeURIComponent(fundName);
             document.getElementById('aumSize').textContent = aumSize ? `AUM: ${decodeURIComponent(aumSize)}` : 'AUM: Not available';
             document.title = `${decodeURIComponent(fundName)} - Open Fund Box`;
-            const newUrl = `${window.location.origin}/${encodeURIComponent(amcName)}/${encodeURIComponent(fundName)}`;
+            const newUrl = `${window.location.pathname}${window.location.search}`;
             history.pushState(null, '', newUrl);
             fetchFundDetails();
         } else {
@@ -296,6 +301,8 @@
             // After populating the table
             const sortType = document.getElementById('fundSortType').value;
             sortTable('fundTable', months.length, sortType);
+
+            renderBarChart(); // Add this at the end
         }
 
         function getDataType() {
@@ -356,7 +363,10 @@
         const dataTypeRadios = document.querySelectorAll('input[name="fundDataType"]');
         if (dataTypeRadios) {
             dataTypeRadios.forEach(radio => {
-                radio.addEventListener('change', renderFundAnalysis);
+                radio.addEventListener('change', () => {
+                    renderFundAnalysis();
+                    renderBarChart();
+                });
             });
         }
 
@@ -381,7 +391,474 @@
             });
         }
 
+        // Fix the escapeHtml function
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")  // Fix the typo here, was /</</g
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        let currentStocks = []; // Keep track of currently displayed stocks
+
+        function renderBarChart(selectedStock = null, replaceIndex = -1) {
+            try {
+                const dataType = getDataType();
+                const last3Months = months.slice(-3);
+                
+                // Create a map of stock data for the last 3 months
+                const stockData = {};
+                
+                monthlyData[fundName].forEach(entry => {
+                    if (last3Months.includes(entry['Month'])) {
+                        const stockInfo = isinData.find(item => item['ISIN Code'] === entry['ISIN Code']);
+                        const stockName = stockInfo ? stockInfo['Stock Name'] : entry['ISIN Code'];
+                        const symbol = stockInfo ? stockInfo['Symbol'] : 'N/A';
+                        
+                        if (!stockData[stockName]) {
+                            stockData[stockName] = {
+                                symbol,
+                                months: {},
+                                totalChange: 0
+                            };
+                        }
+                        
+                        stockData[stockName].months[entry['Month']] = entry[dataType];
+                    }
+                });
+                
+                // Calculate total change for each stock
+                let stockChanges = [];
+                Object.entries(stockData).forEach(([stockName, data]) => {
+                    const firstValue = data.months[last3Months[0]] || 0;
+                    const lastValue = data.months[last3Months[2]] || 0;
+                    const totalChange = lastValue - firstValue;
+                    
+                    if (Object.keys(data.months).length > 0) {
+                        stockChanges.push({
+                            stockName,
+                            symbol: data.symbol,
+                            monthValues: last3Months.map(month => data.months[month] || 0),
+                            totalChange
+                        });
+                    }
+                });
+
+                // If this is initial render or reset
+                if (replaceIndex === -1) {
+                    stockChanges.sort((a, b) => b.totalChange - a.totalChange);
+                    stockChanges = stockChanges.slice(0, 5);
+                    currentStocks = stockChanges.map(item => item.stockName); // Update current stocks
+                } 
+                // If we're replacing a specific stock
+                else if (selectedStock) {
+                    const selectedStockData = stockChanges.find(item => 
+                        item.stockName === selectedStock || item.symbol === selectedStock
+                    );
+                    if (selectedStockData) {
+                        currentStocks[replaceIndex] = selectedStock; // Update specific stock
+                        stockChanges = currentStocks.map(stockName => 
+                            stockChanges.find(item => item.stockName === stockName)
+                        ).filter(Boolean);
+                    }
+                }
+
+                // Find max value for scaling
+                const maxValue = Math.max(...stockChanges.flatMap(item => item.monthValues));
+                
+                // Rest of the rendering code...
+                const barChart = document.getElementById('barChart');
+                if (!barChart) return;
+                
+                barChart.innerHTML = stockChanges.map(item => {
+                    if (!item || !item.stockName) return '';
+                    
+                    const monthBars = item.monthValues.map((value, index) => {
+                        const height = (value / maxValue) * 100;
+                        return `
+                            <div class="month-bar-container" title="${last3Months[index]}">
+                                <div class="month-value">${formatValue(value)}</div>
+                                <div class="bar ${value >= 0 ? 'positive' : 'negative'}" 
+                                     style="height: ${height}%">
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    return `
+                        <div class="bar-item">
+                            <div class="month-bars">
+                                ${monthBars}
+                            </div>
+                            <div class="bar-label" onclick="toggleStockSearch(this)" 
+                                 data-stock="${escapeHtml(item.stockName)}" 
+                                 data-symbol="${escapeHtml(item.symbol)}">
+                                <span class="stock-name">${escapeHtml(item.stockName)}</span>
+                                <span class="symbol">${escapeHtml(item.symbol)}</span>
+                                <div class="bar-label-dropdown"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error rendering bar chart:', error);
+                const barChart = document.getElementById('barChart');
+                if (barChart) {
+                    barChart.innerHTML = '<div class="error">Error rendering chart</div>';
+                }
+            }
+        }
+
+        // Add error handling to toggleStockSearch
+        function toggleStockSearch(element) {
+            try {
+                if (!element || !element.dataset) return;
+                // Get stock info from data attributes instead of trying to find elements
+                const stockName = element.dataset.stock;
+                const symbol = element.dataset.symbol;
+                
+                // Remove active state from other labels
+                document.querySelectorAll('.bar-label.active').forEach(label => {
+                    if (label !== element) {
+                        label.classList.remove('active');
+                        const dropdown = label.querySelector('.bar-label-dropdown');
+                        if (dropdown) {
+                            dropdown.style.display = 'none';
+                        }
+                        // Reset label content if it has an input
+                        if (label.querySelector('input')) {
+                            label.innerHTML = `
+                                <span class="stock-name">${label.dataset.stock}</span>
+                                <span class="symbol">${label.dataset.symbol}</span>
+                                <div class="bar-label-dropdown"></div>
+                            `;
+                        }
+                    }
+                });
+
+                // Toggle active state
+                element.classList.toggle('active');
+                
+                if (element.classList.contains('active')) {
+                    element.innerHTML = `
+                        <input type="text" value="${stockName}" placeholder="Search stock...">
+                        <span class="symbol">${symbol}</span>
+                        <div class="bar-label-dropdown"></div>
+                    `;
+                    
+                    const input = element.querySelector('input');
+                    input.focus();
+                    
+                    // Add input event listener
+                    input.addEventListener('input', handleSearchInput);
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape') {
+                            element.classList.remove('active');
+                            element.innerHTML = `
+                                <span class="stock-name">${stockName}</span>
+                                <span class="symbol">${symbol}</span>
+                                <div class="bar-label-dropdown"></div>
+                            `;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error in toggleStockSearch:', error);
+            }
+        }
+
+        function handleSearchInput(e) {
+            const input = e.target;
+            const barLabel = input.closest('.bar-label');
+            const dropdown = barLabel.querySelector('.bar-label-dropdown');
+            const query = input.value.toLowerCase();
+            
+            if (query.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            
+            // Get unique stocks
+            const stocks = new Set();
+            monthlyData[fundName].forEach(entry => {
+                const stockInfo = isinData.find(item => item['ISIN Code'] === entry['ISIN Code']);
+                if (stockInfo) {
+                    stocks.add(JSON.stringify({
+                        name: stockInfo['Stock Name'],
+                        symbol: stockInfo['Symbol']
+                    }));
+                }
+            });
+            
+            const matches = Array.from(stocks)
+                .map(stock => JSON.parse(stock))
+                .filter(stock => 
+                    stock.name.toLowerCase().includes(query) || 
+                    stock.symbol.toLowerCase().includes(query)
+                )
+                .slice(0, 5);
+            
+            if (matches.length > 0) {
+                dropdown.innerHTML = matches.map(stock => `
+                    <div class="bar-label-option" 
+                         data-stock-name="${escapeHtml(stock.name)}"
+                         data-stock-symbol="${escapeHtml(stock.symbol)}"
+                         onclick="selectStock(this)">
+                        ${stock.name}<br>
+                        <span class="symbol">${stock.symbol}</span>
+                    </div>
+                `).join('');
+                dropdown.style.display = 'block';
+            } else {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function selectStock(element) {
+            const stockName = element.dataset.stockName;
+            const barLabel = element.closest('.bar-label');
+            const barItem = barLabel.closest('.bar-item');
+            const allBars = Array.from(document.querySelectorAll('.bar-item'));
+            const replaceIndex = allBars.indexOf(barItem);
+            
+            barLabel.classList.remove('active');
+            renderBarChart(stockName, replaceIndex);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // ...existing event listeners except initializeSearch...
+        });
     </script>
 </body>
 
 </html>
+
+<style>
+.chart-section {
+    margin-bottom: 24px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+}
+
+.bar-chart {
+    display: flex;
+    justify-content: space-around;
+    height: 300px;
+    gap: 24px;
+    padding: 20px 0;
+}
+
+.bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    position: relative;
+}
+
+.month-bars {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    height: 200px;
+    margin-bottom: 8px;
+}
+
+.month-bar-container {
+    width: 24px;
+    height: 100%;
+    background: #f3f4f6;
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-end;
+}
+
+.month-value {
+    font-size: 10px;
+    text-align: center;
+    position: absolute;
+    top: -20px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2px 4px;
+    border-radius: 4px;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    left: 50%;
+    pointer-events: none;
+}
+
+.month-bar-container:hover .month-value {
+    opacity: 1;
+}
+
+.bar-container {
+    width: 48px;
+    flex-grow: 1;
+    background: #f3f4f6;
+    border-radius: 4px;
+    position: relative;
+}
+
+.bar {
+    width: 100%;
+    position: relative;
+    transition: height 0.3s ease;
+    min-height: 2px;
+    border-radius: 4px;
+}
+
+.bar.positive {
+    background: #16a34a;
+}
+
+.bar.negative {
+    background: #dc2626;
+}
+
+.bar-value {
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.bar-label {
+    font-size: 12px;
+    text-align: center;
+    word-wrap: break-word;
+    width: 100%;
+    margin-top: 8px;
+    position: relative;
+    cursor: pointer;
+}
+
+.bar-label.active {
+    color: #2563eb;
+}
+
+.bar-label input {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    font-size: 12px;
+    outline: none;
+    margin-top: 4px;
+}
+
+.bar-label-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    margin-top: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    z-index: 10;
+    display: none;
+}
+
+.bar-label-option {
+    padding: 4px 8px;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.bar-label-option:hover {
+    background: #f3f4f6;
+}
+
+.bar-label .symbol {
+    display: block;
+    margin-top: 2px;
+}
+
+.symbol {
+    color: #666;
+    font-size: 11px;
+}
+
+.search-container {
+    position: relative;
+    width: 300px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.search-input:focus {
+    border-color: #2563eb;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-top: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    z-index: 10;
+    display: none;
+}
+
+.search-result-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.search-result-item:hover {
+    background: #f3f4f6;
+}
+
+.search-result-name {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.search-result-symbol {
+    font-size: 12px;
+    color: #666;
+}
+
+.error {
+    color: #dc2626;
+    text-align: center;
+    padding: 1rem;
+}
+</style>
