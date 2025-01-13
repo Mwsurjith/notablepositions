@@ -660,16 +660,24 @@
                         const month0Data = monthlyData[fund['Fund Name']].find(d => d['ISIN Code'] === stock && d['Month'] === months[monthIndex]);
                         const month1Data = monthlyData[fund['Fund Name']].find(d => d['ISIN Code'] === stock && d['Month'] === months[monthIndex + 1]);
 
-                        if (month0Data && month1Data) {
+                        // Update the value calculation logic
+                        if (month1Data) {  // If stock exists in current month
                             if (dataType === 'Quantity') {
-                                month0Value += parseFloat(month0Data['Quantity']) || 0;
                                 month1Value += parseFloat(month1Data['Quantity']) || 0;
                             } else if (dataType === 'Market Value') {
-                                month0Value += parseFloat(month0Data['Market Value']) || 0;
                                 month1Value += parseFloat(month1Data['Market Value']) || 0;
                             } else if (dataType === '% to Nav') {
-                                month0Value += parseFloat(month0Data['% to Nav']) || 0;
                                 month1Value += parseFloat(month1Data['% to Nav']) || 0;
+                            }
+                        }
+
+                        if (month0Data) {  // If stock exists in previous month
+                            if (dataType === 'Quantity') {
+                                month0Value += parseFloat(month0Data['Quantity']) || 0;
+                            } else if (dataType === 'Market Value') {
+                                month0Value += parseFloat(month0Data['Market Value']) || 0;
+                            } else if (dataType === '% to Nav') {
+                                month0Value += parseFloat(month0Data['% to Nav']) || 0;
                             }
                         }
                     });
@@ -677,16 +685,16 @@
                     const change = month1Value - month0Value;
                     consolidatedChange += change;
                     
-                    // Count AMC buy/sell activity
-                    if (Math.abs(change) > 0) {
-                        if (change > 0) amcBought++;
-                        if (change < 0) amcSold--;
+                    // Update the AMC count logic
+                    if (month1Value > 0 || month0Value > 0) {
+                        if (month1Value > month0Value) amcBought++;
+                        if (month1Value < month0Value) amcSold--;
                     }
 
                     const cellValue = formatIndianNumber(change.toFixed(2));
                     row.insertCell().textContent = cellValue;
 
-                    if (cellValue !== '0.00') {
+                    if (month1Value > 0 || month0Value > 0) {
                         isStockHeldByAnyAMC = true;
                     }
                 });
@@ -811,26 +819,36 @@
                                     d['Fund Name'] === fund['Fund Name']
                                 );
 
-                                if (prevMonthData && currentMonthData) {
-                                    let prevValue = 0, currentValue = 0;
+                                // Update the value calculation logic
+                                let prevValue = 0, currentValue = 0;
+
+                                if (currentMonthData) {  // If stock exists in current month
                                     if (dataType === 'Quantity') {
-                                        prevValue = parseFloat(prevMonthData['Quantity']) || 0;
                                         currentValue = parseFloat(currentMonthData['Quantity']) || 0;
                                     } else if (dataType === 'Market Value') {
-                                        prevValue = parseFloat(prevMonthData['Market Value']) || 0;
                                         currentValue = parseFloat(currentMonthData['Market Value']) || 0;
                                     } else if (dataType === '% to Nav') {
-                                        prevValue = parseFloat(prevMonthData['% to Nav']) || 0;
                                         currentValue = parseFloat(currentMonthData['% to Nav']) || 0;
                                     }
-                                    const change = currentValue - prevValue;
-                                    consolidatedChange += change;
+                                }
 
-                                    // Count AMC buy/sell activity
-                                    if (Math.abs(change) > 0) {
-                                        if (change > 0) amcBought++;
-                                        if (change < 0) amcSold--;
+                                if (prevMonthData) {  // If stock exists in previous month
+                                    if (dataType === 'Quantity') {
+                                        prevValue = parseFloat(prevMonthData['Quantity']) || 0;
+                                    } else if (dataType === 'Market Value') {
+                                        prevValue = parseFloat(prevMonthData['Market Value']) || 0;
+                                    } else if (dataType === '% to Nav') {
+                                        prevValue = parseFloat(prevMonthData['% to Nav']) || 0;
                                     }
+                                }
+
+                                const change = currentValue - prevValue;
+                                consolidatedChange += change;
+
+                                // Update the AMC count logic
+                                if (currentValue > 0 || prevValue > 0) {
+                                    if (currentValue > prevValue) amcBought++;
+                                    if (currentValue < prevValue) amcSold--;
                                 }
                             });
                         });
