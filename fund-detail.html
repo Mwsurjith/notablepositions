@@ -75,7 +75,15 @@
                     </div>
 
                     <div class="chart-section">
-                        <div class="chart-header"></div>
+                        <div class="chart-header">
+                            <div class="input-dropdown-box">
+                                <select id="chartDuration" class="dropdown-menu">
+                                    <option value="1">1 Month Change</option>
+                                    <option value="2">2 Months Change</option>
+                                    <option value="3" selected>3 Months Change</option>
+                                </select>
+                            </div>
+                        </div>
                         <div id="barChart" class="bar-chart"></div>
                     </div>
 
@@ -335,27 +343,67 @@
             const tbody = table.querySelector('tbody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
             const sortType = document.getElementById('fundSortType').value;
-
-            const headers = table.querySelectorAll('th');
-            headers.forEach(header => header.classList.remove('sorted'));
-            headers[columnIndex].classList.add('sorted');
+            const header = table.querySelectorAll('th')[columnIndex];
+            
+            // Toggle sort direction
+            const currentDirection = header.getAttribute('data-sort') || 'desc';
+            const newDirection = currentDirection === 'desc' ? 'asc' : 'desc';
+            
+            // Update all headers
+            table.querySelectorAll('th').forEach(th => {
+                th.removeAttribute('data-sort');
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            
+            // Update current header
+            header.setAttribute('data-sort', newDirection);
+            header.classList.add(`sorted-${newDirection}`);
 
             rows.sort((a, b) => {
                 const aCell = a.cells[columnIndex];
                 const bCell = b.cells[columnIndex];
+                let comparison = 0;
 
                 if (columnIndex === 0) {
                     // Sort by stock name
-                    return aCell.textContent.localeCompare(bCell.textContent);
+                    comparison = aCell.textContent.localeCompare(bCell.textContent);
                 } else {
-                    return sortType === 'change' ?
-                        getSortValue(bCell, 'change') - getSortValue(aCell, 'change') :
-                        getSortValue(bCell, 'value') - getSortValue(aCell, 'value');
+                    if (sortType === 'value') {
+                        const aValue = parseFloat(aCell.textContent.split('\n')[0].replace(/[^0-9.-]+/g, ""));
+                        const bValue = parseFloat(bCell.textContent.split('\n')[0].replace(/[^0-9.-]+/g, ""));
+                        comparison = bValue - aValue;
+                    } else if (sortType === 'change') {
+                        const aChange = parseFloat(aCell.querySelector('[data-change]').dataset.change);
+                        const bChange = parseFloat(bCell.querySelector('[data-change]').dataset.change);
+                        comparison = bChange - aChange;
+                    }
                 }
+
+                return newDirection === 'asc' ? comparison : -comparison;
             });
 
             tbody.innerHTML = '';
             rows.forEach(row => tbody.appendChild(row));
+        }
+
+        const dataTypeRadios = document.querySelectorAll('input[name="fundDataType"]');
+        if (dataTypeRadios) {
+            dataTypeRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    renderFundAnalysis();
+                    renderBarChart();
+                });
+            });
+        }
+
+        const fundSortType = document.getElementById('fundSortType');
+        if (fundSortType) {
+            fundSortType.addEventListener('change', () => {
+                const currentSortColumn = document.querySelector('th.sorted');
+                const columnIndex = currentSortColumn ? Array.from(currentSortColumn.parentNode.children).indexOf(currentSortColumn) : months.length;
+                sortTable('fundTable', columnIndex);
+
+            });
         }
 
         function updateSortedColumn(columnIndex) {
@@ -385,13 +433,33 @@
         function renderBarChart(selectedStock = null, replaceIndex = -1) {
             try {
                 const dataType = getDataType();
-                const last3Months = months.slice(-3);
+                const duration = parseInt(document.getElementById('chartDuration').value);
+                const allMonths = [...months]; // Create copy of all months
+                const lastMonths = [];
                 
-                // Create a map of stock data for the last 3 months
+                // Get the appropriate months based on duration
+                if (duration === 1) {
+                    // Current month and previous month
+                    lastMonths.push(allMonths[allMonths.length - 1]); // Current month
+                    lastMonths.unshift(allMonths[allMonths.length - 2]); // Previous month
+                } else if (duration === 2) {
+                    // Current month and previous two months
+                    lastMonths.push(allMonths[allMonths.length - 1]); // Current month
+                    lastMonths.unshift(allMonths[allMonths.length - 2]); // Previous month
+                    lastMonths.unshift(allMonths[allMonths.length - 3]); // Two months ago
+                } else if (duration === 3) {
+                    // Current month and previous three months
+                    lastMonths.push(allMonths[allMonths.length - 1]); // Current month
+                    lastMonths.unshift(allMonths[allMonths.length - 2]); // Previous month
+                    lastMonths.unshift(allMonths[allMonths.length - 3]); // Two months ago
+                    lastMonths.unshift(allMonths[allMonths.length - 4]); // Three months ago
+                }
+                
+                // Create a map of stock data for the selected duration
                 const stockData = {};
                 
                 monthlyData[fundName].forEach(entry => {
-                    if (last3Months.includes(entry['Month'])) {
+                    if (lastMonths.includes(entry['Month'])) {
                         const stockInfo = isinData.find(item => item['ISIN Code'] === entry['ISIN Code']);
                         const stockName = stockInfo ? stockInfo['Stock Name'] : entry['ISIN Code'];
                         const symbol = stockInfo ? stockInfo['Symbol'] : 'N/A';
@@ -411,15 +479,15 @@
                 // Calculate total change for each stock
                 let stockChanges = [];
                 Object.entries(stockData).forEach(([stockName, data]) => {
-                    const firstValue = data.months[last3Months[0]] || 0;
-                    const lastValue = data.months[last3Months[2]] || 0;
-                    const totalChange = lastValue - firstValue;
+                    const currentValue = data.months[lastMonths[lastMonths.length - 1]] || 0;
+                    const firstValue = data.months[lastMonths[0]] || 0;
+                    const totalChange = currentValue - firstValue;
                     
                     if (Object.keys(data.months).length > 0) {
                         stockChanges.push({
                             stockName,
                             symbol: data.symbol,
-                            monthValues: last3Months.map(month => data.months[month] || 0),
+                            monthValues: lastMonths.map(month => data.months[month] || 0),
                             totalChange
                         });
                     }
@@ -457,7 +525,7 @@
                     const monthBars = item.monthValues.map((value, index) => {
                         const height = (value / maxValue) * 100;
                         return `
-                            <div class="month-bar-container" title="${last3Months[index]}">
+                            <div class="month-bar-container" title="${lastMonths[index]}">
                                 <div class="month-value">${formatValue(value)}</div>
                                 <div class="bar ${value >= 0 ? 'positive' : 'negative'}" 
                                      style="height: ${height}%">
@@ -607,105 +675,15 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // ...existing event listeners except initializeSearch...
+            // Add event listener for chart duration change
+            const chartDuration = document.getElementById('chartDuration');
+            if (chartDuration) {
+                chartDuration.addEventListener('change', () => {
+                    renderBarChart();
+                });
+            }
+            // ...existing event listeners...
         });
-
-        // Add these sorting functions
-        function getSortValue(cell, type = 'value') {
-            if (!cell) return 0;
-            try {
-                if (type === 'change') {
-                    const changeSpan = cell.querySelector('[data-change]');
-                    return changeSpan ? parseFloat(changeSpan.dataset.change) : 0;
-                } else { // value
-                    const value = cell.textContent.split('\n')[0].replace(/[^0-9.-]+/g, "");
-                    return parseFloat(value) || 0;
-                }
-            } catch (e) {
-                console.error('Error getting sort value:', e);
-                return 0;
-            }
-        }
-
-        function sortTable(tableId, columnIndex) {
-            const table = document.getElementById(tableId);
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            const sortType = document.getElementById('fundSortType').value;
-
-            const headers = table.querySelectorAll('th');
-            headers.forEach(header => header.classList.remove('sorted'));
-            headers[columnIndex].classList.add('sorted');
-
-            rows.sort((a, b) => {
-                const aCell = a.cells[columnIndex];
-                const bCell = b.cells[columnIndex];
-
-                if (columnIndex === 0) {
-                    // Sort by stock name
-                    return aCell.textContent.localeCompare(bCell.textContent);
-                } else {
-                    return sortType === 'change' ?
-                        getSortValue(bCell, 'change') - getSortValue(aCell, 'change') :
-                        getSortValue(bCell, 'value') - getSortValue(aCell, 'value');
-                }
-            });
-
-            tbody.innerHTML = '';
-            rows.forEach(row => tbody.appendChild(row));
-        }
-
-        // Update styles for sorted header and clickable headers
-        const style = document.createElement('style');
-        style.textContent = `
-            .table-comp th {
-                cursor: pointer;
-                user-select: none;
-            }
-            .table-comp th.sorted {
-                color: #2563eb;
-            }
-            .table-comp th:hover {
-                background: #f3f4f6;
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Update event listener for fundSortType
-        if (fundSortType) {
-            fundSortType.addEventListener('change', () => {
-                const currentSortColumn = document.querySelector('th.sorted');
-                const columnIndex = currentSortColumn ? 
-                    Array.from(currentSortColumn.parentNode.children).indexOf(currentSortColumn) : 
-                    months.length; // Default to last month
-                sortTable('fundTable', columnIndex);
-            });
-        }
-
-        // Update the header creation in renderFundAnalysis
-        function renderFundAnalysis() {
-            // ...existing code until header creation...
-
-            const headerRow = document.createElement('tr');
-            const stockHeader = document.createElement('th');
-            stockHeader.textContent = 'STOCK NAME';
-            stockHeader.className = 'head-main';
-            stockHeader.onclick = () => sortTable('fundTable', 0);
-            headerRow.appendChild(stockHeader);
-
-            months.forEach((month, index) => {
-                const th = document.createElement('th');
-                th.textContent = month.toUpperCase();
-                th.className = 'head-list';
-                th.onclick = () => sortTable('fundTable', index + 1);
-                headerRow.appendChild(th);
-            });
-
-            // ...rest of existing code...
-
-            // After populating the table, sort by the last month by default
-            sortTable('fundTable', months.length);
-        }
     </script>
 </body>
 
@@ -935,5 +913,62 @@
     color: #dc2626;
     text-align: center;
     padding: 1rem;
+}
+
+.head-main, .head-list {
+    cursor: pointer;
+}
+
+.head-main::after, .head-list::after {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 8px;
+    vertical-align: middle;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+}
+
+.sorted-asc::after {
+    border-bottom: 4px solid currentColor;
+    border-top: none;
+}
+
+.sorted-desc::after {
+    border-top: 4px solid currentColor;
+    border-bottom: none;
+}
+
+th:hover::after {
+    opacity: 0.5;
+}
+
+.sorted-asc::after, .sorted-desc::after {
+    opacity: 1;
+}
+
+.suffix-menu {
+    display: flex;
+    gap: 8px;
+}
+
+.input-dropdown-box {
+    position: relative;
+}
+
+.dropdown-menu {
+    padding: 4px 24px 4px 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    font-size: 14px;
+    appearance: none;
+    background-color: white;
+    cursor: pointer;
+}
+
+.dropdown-menu:focus {
+    outline: none;
+    border-color: #2563eb;
 }
 </style>

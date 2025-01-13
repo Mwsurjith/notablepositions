@@ -308,14 +308,14 @@
             const stockHeader = document.createElement('th');
             stockHeader.textContent = 'STOCK NAME';
             stockHeader.classList.add('head-main'); // CSS class
-            stockHeader.onclick = () => sortTable(0);
+            stockHeader.onclick = () => sortTable('amcTable', 0);
             headerRow.appendChild(stockHeader);
 
             months.forEach((month, index) => {
                 const th = document.createElement('th');
                 th.textContent = month.toUpperCase();
                 th.classList.add('head-list'); // CSS class
-                th.onclick = () => sortTable(index + 1);
+                th.onclick = () => sortTable('amcTable', index + 1);
                 headerRow.appendChild(th);
             });
             thead.appendChild(headerRow);
@@ -391,35 +391,51 @@
             }
         }
 
-        function sortTable(columnIndex) {
-            const table = document.getElementById('amcTable');
+        function sortTable(tableId, columnIndex) {
+            const table = document.getElementById(tableId);
             const tbody = table.querySelector('tbody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
-
             const sortType = document.getElementById('amcSortType').value;
+            const header = table.querySelectorAll('th')[columnIndex];
+            
+            // Toggle sort direction
+            const currentDirection = header.getAttribute('data-sort') || 'desc';
+            const newDirection = currentDirection === 'desc' ? 'asc' : 'desc';
+            
+            // Update all headers
+            table.querySelectorAll('th').forEach(th => {
+                th.removeAttribute('data-sort');
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            
+            // Update current header
+            header.setAttribute('data-sort', newDirection);
+            header.classList.add(`sorted-${newDirection}`);
 
             rows.sort((a, b) => {
-                let aValue, bValue;
+                const aCell = a.cells[columnIndex];
+                const bCell = b.cells[columnIndex];
+                let comparison = 0;
 
                 if (columnIndex === 0) {
                     // Sort by stock name
-                    aValue = a.cells[0].textContent;
-                    bValue = b.cells[0].textContent;
-                    return aValue.localeCompare(bValue);
+                    comparison = aCell.textContent.localeCompare(bCell.textContent);
                 } else {
-                    // Sort by numeric value
                     if (sortType === 'value') {
-                        aValue = parseFloat(a.cells[columnIndex].textContent.split('\n')[0].replace(/,/g, ''));
-                        bValue = parseFloat(b.cells[columnIndex].textContent.split('\n')[0].replace(/,/g, ''));
+                        const aValue = parseFloat(aCell.textContent.split('\n')[0].replace(/[^0-9.-]+/g, ""));
+                        const bValue = parseFloat(bCell.textContent.split('\n')[0].replace(/[^0-9.-]+/g, ""));
+                        comparison = bValue - aValue;
                     } else if (sortType === 'change') {
-                        aValue = parseFloat(a.cells[columnIndex].querySelector('span').dataset.change);
-                        bValue = parseFloat(b.cells[columnIndex].querySelector('span').dataset.change);
+                        const aChange = parseFloat(aCell.querySelector('[data-change]').dataset.change);
+                        const bChange = parseFloat(bCell.querySelector('[data-change]').dataset.change);
+                        comparison = bChange - aChange;
                     }
-                    return bValue - aValue; // Descending order
                 }
+
+                return newDirection === 'asc' ? comparison : -comparison;
             });
 
-            // Re-append sorted rows
+            tbody.innerHTML = '';
             rows.forEach(row => tbody.appendChild(row));
         }
 
@@ -447,13 +463,52 @@
             const amcSortType = document.getElementById('amcSortType');
             if (amcSortType) {
                 amcSortType.addEventListener('change', () => {
-                    sortTable('amcTable', months.length + 1, amcSortType.value);
+                    const currentSortColumn = document.querySelector('#amcTable th.sorted-asc, #amcTable th.sorted-desc');
+                    const columnIndex = currentSortColumn ? 
+                        Array.from(currentSortColumn.parentNode.children).indexOf(currentSortColumn) : 
+                        months.length;
+                    sortTable('amcTable', columnIndex);
                 });
             }
         };
 
         fetchAndRenderFunds(amcName);
     </script>
+
+    <style>
+        .head-main, .head-list {
+            cursor: pointer;
+        }
+
+        .head-main::after, .head-list::after {
+            content: '';
+            display: inline-block;
+            width: 0;
+            height: 0;
+            margin-left: 8px;
+            vertical-align: middle;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+        }
+
+        .sorted-asc::after {
+            border-bottom: 4px solid currentColor;
+            border-top: none;
+        }
+
+        .sorted-desc::after {
+            border-top: 4px solid currentColor;
+            border-bottom: none;
+        }
+
+        th:hover::after {
+            opacity: 0.5;
+        }
+
+        .sorted-asc::after, .sorted-desc::after {
+            opacity: 1;
+        }
+    </style>
 </body>
 
 </html>

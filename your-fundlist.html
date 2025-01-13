@@ -66,6 +66,13 @@
                             </div>
 
                             <div class="suffix-menu">
+                                <!-- Add search box here -->
+                                <div class="search-box">
+                                    <input type="text" id="pmaSearchInput" placeholder="Search stocks..." class="search-input">
+                                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                        <path d="M10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10C18 11.8487 17.3729 13.551 16.3199 14.9056L21.7071 20.2929L20.2929 21.7071L14.9056 16.3199C13.551 17.3729 11.8487 18 10 18ZM16 10C16 13.3137 13.3137 16 10 16C6.68629 16 4 13.3137 4 10C4 6.68629 6.68629 4 10 4C13.3137 4 16 6.68629 16 10Z"></path>
+                                    </svg>
+                                </div>
                                 <!-- month select dropdown -->
                                 <div class="input-dropdown-box">
                                     <select id="monthSelect" class="dropdown-menu"></select>
@@ -161,6 +168,13 @@
                             </div>
 
                             <div class="suffix-menu">
+                                <!-- Add search box here -->
+                                <div class="search-box">
+                                    <input type="text" id="momSearchInput" placeholder="Search stocks..." class="search-input">
+                                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                        <path d="M10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10C18 11.8487 17.3729 13.551 16.3199 14.9056L21.7071 20.2929L20.2929 21.7071L14.9056 16.3199C13.551 17.3729 11.8487 18 10 18ZM16 10C16 13.3137 13.3137 16 10 16C6.68629 16 4 13.3137 4 10C4 6.68629 6.68629 4 10 4C13.3137 4 16 6.68629 16 10Z"></path>
+                                    </svg>
+                                </div>
                                 <!-- amc select dropdown -->
                                 <div class="input-dropdown-box">
                                     <button id="momAMCButton" class="dropdown-menu" onclick="toggleAMCDropdown(event)">
@@ -247,6 +261,38 @@
             </div>
         </div>
     </section>
+
+    <style>
+        /* Add these styles in your existing CSS */
+        .search-box {
+            position: relative;
+            margin-right: 16px;
+        }
+
+        .search-input {
+            padding: 8px 12px 8px 36px;
+            border: 1px solid #E1E0E0;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 200px;
+            color: #363530;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #6366F1;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: #71717A;
+        }
+    </style>
 
     <script>
         // Constants
@@ -668,6 +714,12 @@
                 document.getElementById('pmaTable').style.display = 'block';
                 document.getElementById('pmaErrorMessage').style.display = 'none';
             }
+
+            const searchTerm = document.getElementById('pmaSearchInput').value;
+            // Re-apply search filter after rendering
+            if (searchTerm) {
+                filterTable('pmaTable', searchTerm);
+            }
         }
 
         function renderMonthOnMonthTable(masterData, monthlyData, selectedAMCs, months) {
@@ -819,6 +871,12 @@
             } else {
                 document.getElementById('momTable').style.display = 'block';
                 document.getElementById('momErrorMessage').style.display = 'none';
+            }
+
+            const searchTerm = document.getElementById('momSearchInput').value;
+            // Re-apply search filter after rendering
+            if (searchTerm) {
+                filterTable('momTable', searchTerm);
             }
         }
 
@@ -984,67 +1042,72 @@
             const table = document.getElementById(tableId);
             const headers = table.getElementsByTagName('th');
             const currentHeader = headers[n];
+            const tbody = table.getElementsByTagName('tbody')[0];
+            const rows = Array.from(tbody.rows);
 
-            // Reset all sort icons to default  
+            // Reset all sort icons to default
             table.querySelectorAll('.sort-icon').forEach(icon => {
-                icon.innerHTML = `  
-                    <path class="sort-path" d="M5.79297 14.9572L12.0001 21.1643L18.2072 14.9572L16.7929 13.543L12.0001 18.3359L7.20718 13.543L5.79297 14.9572Z" fill="#E1E0E0"/>  
-                    <path class="sort-path" d="M18.2072 9.0428L12.0001 2.83569L5.79297 9.0428L7.20718 10.457L12.0001 5.66412L16.793 10.457L18.2072 9.0428Z" fill="#E1E0E0"/>  
+                icon.innerHTML = `
+                    <path class="sort-path" d="M5.79297 14.9572L12.0001 21.1643L18.2072 14.9572L16.7929 13.543L12.0001 18.3359L7.20718 13.543L5.79297 14.9572Z" fill="#E1E0E0"/>
+                    <path class="sort-path" d="M18.2072 9.0428L12.0001 2.83569L5.79297 9.0428L7.20718 10.457L12.0001 5.66412L16.793 10.457L18.2072 9.0428Z" fill="#E1E0E0"/>
                 `;
             });
 
-            let rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-            switching = true;
-            dir = "asc";
+            // Get current sort direction
+            const currentDir = currentHeader.getAttribute('data-sort') === 'asc' ? 'desc' : 'asc';
+            currentHeader.setAttribute('data-sort', currentDir);
 
-            while (switching) {
-                switching = false;
-                rows = table.rows;
-
-                for (i = 1; i < (rows.length - 1); i++) {
-                    shouldSwitch = false;
-                    x = rows[i].getElementsByTagName("TD")[n];
-                    y = rows[i + 1].getElementsByTagName("TD")[n];
-
-                    let xValue = n === 0 ? x.textContent.toLowerCase() : parseFloat(x.textContent.replace(/,/g, ''));
-                    let yValue = n === 0 ? y.textContent.toLowerCase() : parseFloat(y.textContent.replace(/,/g, ''));
-
-                    if (dir === "asc") {
-                        if (xValue > yValue) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    } else if (dir === "desc") {
-                        if (xValue < yValue) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchcount++;
+            // Cache the values and their indices
+            const values = rows.map((row, index) => {
+                const cell = row.cells[n];
+                let value;
+                if (n === 0) {
+                    // For stock names, use text content
+                    value = cell.textContent.toLowerCase();
                 } else {
-                    if (switchcount === 0 && dir === "asc") {
-                        dir = "desc";
-                        switching = true;
-                    }
+                    // For numeric columns, extract the first number
+                    const match = cell.textContent.match(/-?[\d,]+\.?\d*/);
+                    value = match ? parseFloat(match[0].replace(/,/g, '')) : 0;
                 }
-            }
+                return { value, index };
+            });
 
-            // Update sort icon for current column  
+            // Sort the cached values
+            values.sort((a, b) => {
+                if (n === 0) {
+                    // String comparison for stock names
+                    return currentDir === 'asc' 
+                        ? a.value.localeCompare(b.value)
+                        : b.value.localeCompare(a.value);
+                } else {
+                    // Numeric comparison for other columns
+                    return currentDir === 'asc' 
+                        ? a.value - b.value
+                        : b.value - a.value;
+                }
+            });
+
+            // Create new document fragment for better performance
+            const fragment = document.createDocumentFragment();
+            values.forEach(item => {
+                fragment.appendChild(rows[item.index].cloneNode(true));
+            });
+
+            // Replace tbody content with sorted rows
+            tbody.innerHTML = '';
+            tbody.appendChild(fragment);
+
+            // Update sort icon
             const sortIcon = currentHeader.querySelector('.sort-icon');
-            if (dir === "desc") {
-                sortIcon.innerHTML = `  
-                    <path d="M5.79297 14.9572L12.0001 21.1643L18.2072 14.9572L16.7929 13.543L12.0001 18.3359L7.20718 13.543L5.79297 14.9572Z" fill="#363530"/>  
-                    <path class="sort-path" d="M18.2072 9.0428L12.0001 2.83569L5.79297 9.0428L7.20718 10.457L12.0001 5.66412L16.793 10.457L18.2072 9.0428Z" fill="#E1E0E0"/>  
+            if (currentDir === "desc") {
+                sortIcon.innerHTML = `
+                    <path d="M5.79297 14.9572L12.0001 21.1643L18.2072 14.9572L16.7929 13.543L12.0001 18.3359L7.20718 13.543L5.79297 14.9572Z" fill="#363530"/>
+                    <path class="sort-path" d="M18.2072 9.0428L12.0001 2.83569L5.79297 9.0428L7.20718 10.457L12.0001 5.66412L16.793 10.457L18.2072 9.0428Z" fill="#E1E0E0"/>
                 `;
             } else {
-                sortIcon.innerHTML = `  
-                    <path class="sort-path" d="M5.79297 14.9572L12.0001 21.1643L18.2072 14.9572L16.7929 13.543L12.0001 18.3359L7.20718 13.543L5.79297 14.9572Z" fill="#E1E0E0"/>  
-                    <path d="M18.2072 9.0428L12.0001 2.83569L5.79297 9.0428L7.20718 10.457L12.0001 5.66412L16.793 10.457L18.2072 9.0428Z" fill="#363530"/>  
+                sortIcon.innerHTML = `
+                    <path class="sort-path" d="M5.79297 14.9572L12.0001 21.1643L18.2072 14.9572L16.7929 13.543L12.0001 18.3359L7.20718 13.543L5.79297 14.9572Z" fill="#E1E0E0"/>
+                    <path d="M18.2072 9.0428L12.0001 2.83569L5.79297 9.0428L7.20718 10.457L12.0001 5.66412L16.793 10.457L18.2072 9.0428Z" fill="#363530"/>
                 `;
             }
         }
@@ -1108,6 +1171,18 @@
                 option.addEventListener('change', handlePMACategoryOptionChange);
             });
 
+            // Add search functionality
+            const pmaSearchInput = document.getElementById('pmaSearchInput');
+            const momSearchInput = document.getElementById('momSearchInput');
+
+            pmaSearchInput.addEventListener('input', (e) => {
+                filterTable('pmaTable', e.target.value);
+            });
+
+            momSearchInput.addEventListener('input', (e) => {
+                filterTable('momTable', e.target.value);
+            });
+
             showTab('perMonthAnalysis');
         });
 
@@ -1160,6 +1235,25 @@
                     dropdownElement.style.display = 'none';
                 }
             });
+        }
+
+        function filterTable(tableId, searchTerm) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            const rows = tbody.getElementsByTagName('tr');
+            
+            searchTerm = searchTerm.toLowerCase();
+            
+            for (let row of rows) {
+                const stockCell = row.cells[0];
+                const stockName = stockCell.textContent.toLowerCase();
+                const symbol = stockCell.querySelector('.symbol')?.textContent.toLowerCase() || '';
+                
+                if (stockName.includes(searchTerm) || symbol.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
         }
     </script>
 </body>
